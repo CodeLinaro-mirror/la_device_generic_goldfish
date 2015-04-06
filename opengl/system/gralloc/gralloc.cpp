@@ -1,5 +1,6 @@
 /*
 * Copyright (C) 2011 The Android Open Source Project
+* Copyright (c) 2015 The Linux Foundation. All rights reserved.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -918,7 +919,7 @@ static int gralloc_device_open(const hw_module_t* module,
         *device = &dev->device.common;
         status = 0;
     }
-    else if (!strcmp(name, GRALLOC_HARDWARE_FB0)) {
+    else if (!strcmp(name, GRALLOC_HARDWARE_FB_PRIMARY)) {
 
         // return error if connection with host can not be established
         DEFINE_AND_VALIDATE_HOST_CONNECTION;
