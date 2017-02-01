@@ -2,7 +2,7 @@ on fs
     mount_all /fstab.ranchu
 
 on early-init
-    mount debugfs debugfs /sys/kernel/debug
+    mount debugfs debugfs /sys/kernel/debug mode=755
 
 on init
 
@@ -42,8 +42,7 @@ on boot
     stop akmd
 
 # start essential services
-    setprop rild.libpath libreference-ril.so
-    # These were written for the classic emulator, but are applicable to ranchu
+# These were written for the classic emulator, but are applicable to ranchu
     start goldfish-logcat
     start goldfish-setup
 
