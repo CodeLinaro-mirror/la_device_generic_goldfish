@@ -26,6 +26,7 @@ PRODUCT_PACKAGES += \
     lib_renderControl_enc \
     libEGL_emulation \
     libGLESv2_enc \
+    libOpenglCodecCommon \
     libOpenglSystemCommon \
     libGLESv2_emulation \
     libGLESv1_enc \
@@ -120,11 +121,17 @@ PRODUCT_PACKAGES += \
 	hostapd \
 	hostapd_nohidl \
 	ipv6proxy \
+	netmgr \
 	wpa_supplicant \
 
 # Needed for /system/priv-app/SdkSetup/SdkSetup.apk to pass CTS android.permission2.cts.PrivappPermissionsTest.
 PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/permissions/privapp-permissions-goldfish.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/privapp-permissions-goldfish.xml
+
+ifeq ($(BOARD_AVB_ENABLE),true)
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.software.verified_boot.xml:system/etc/permissions/android.software.verified_boot.xml
+endif
 
 PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/apns-conf.xml:data/misc/apns/apns-conf.xml \
