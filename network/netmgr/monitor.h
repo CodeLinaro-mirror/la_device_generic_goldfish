@@ -38,10 +38,11 @@ public:
     void setOnInterfaceState(OnInterfaceStateCallback callback);
 
     // Pollable interface
-    void onReadAvailable() override;
-    void onClose() override;
-    void onTimeout() override;
-    Pollable::Data data() const override;
+    void getPollData(std::vector<pollfd>* fds) const override;
+    Timestamp getTimeout() const override;
+    bool onReadAvailable(int fd, int* status) override;
+    bool onClose(int fd, int* status) override;
+    bool onTimeout(int* status) override;
 
 private:
     Result openSocket();
