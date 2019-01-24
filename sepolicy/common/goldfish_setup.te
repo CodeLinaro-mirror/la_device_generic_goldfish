@@ -9,6 +9,7 @@ init_daemon_domain(goldfish_setup)
 allow goldfish_setup self:capability { fowner chown net_admin net_raw };
 allow goldfish_setup self:udp_socket { create ioctl };
 allow goldfish_setup vendor_toolbox_exec:file execute_no_trans;
+allow goldfish_setup vendor_file:file execute_no_trans;
 allowxperm goldfish_setup self:udp_socket ioctl priv_sock_ioctls;
 wakelock_use(goldfish_setup);
 allow goldfish_setup vendor_shell_exec:file { rx_file_perms };
@@ -31,6 +32,8 @@ allow goldfish_setup kernel:system module_request;
 set_prop(goldfish_setup, qemu_prop);
 get_prop(goldfish_setup, net_share_prop);
 # Allow goldfish_setup to run /system/bin/ip and /system/bin/iw
+# TODO(b/113124961): clean up this Treble violation.
+typeattribute goldfish_setup vendor_executes_system_violators;
 allow goldfish_setup system_file:file rx_file_perms;
 # Allow goldfish_setup to run init.wifi.sh
 allow goldfish_setup goldfish_setup_exec:file execute_no_trans;
