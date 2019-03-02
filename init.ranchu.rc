@@ -3,6 +3,7 @@ on fs
 
 on early-init
     mount debugfs debugfs /sys/kernel/debug mode=755
+    mount proc proc /proc remount hidepid=2,gid=3009
 
 on init
 
@@ -25,6 +26,7 @@ on boot
     setprop debug.hwui.renderer opengl
     setprop debug.hwui.renderer ${ro.kernel.qemu.uirenderer}
     setprop ro.opengles.version ${ro.kernel.qemu.opengles.version}
+    setprop ro.zygote.disable_gl_preload 1
     setprop dalvik.vm.heapsize 192m
     setprop dalvik.vm.heapsize ${ro.kernel.qemu.dalvik.vm.heapsize}
     chown root system /sys/power/wake_lock

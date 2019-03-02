@@ -19,6 +19,7 @@
 
 # Device modules
 PRODUCT_PACKAGES += \
+    vulkan.ranchu \
     gralloc.goldfish \
     gralloc.goldfish.default \
     gralloc.ranchu \
@@ -62,6 +63,7 @@ PRODUCT_PACKAGES += \
     android.hardware.wifi@1.0-service \
     android.hardware.biometrics.fingerprint@2.1-service \
     sh_vendor \
+    iw_vendor \
     audio.r_submix.default \
     local_time.default \
     SdkSetup
@@ -96,12 +98,13 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     android.hardware.drm@1.0-service \
     android.hardware.drm@1.0-impl \
-    android.hardware.drm@1.1-service.clearkey \
-    android.hardware.drm@1.1-service.widevine
+    android.hardware.drm@1.2-service.clearkey \
+    android.hardware.drm@1.2-service.widevine
 
 PRODUCT_PACKAGES += \
     android.hardware.power@1.1-service.ranchu \
 
+PRODUCT_PROPERTY_OVERRIDES += ro.control_privapp_permissions=enforce
 PRODUCT_PROPERTY_OVERRIDES += ro.hardware.power=ranchu
 
 PRODUCT_PACKAGES += \
@@ -158,6 +161,7 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.camera.autofocus.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.autofocus.xml \
     frameworks/native/data/etc/android.hardware.camera.full.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.full.xml \
     frameworks/native/data/etc/android.hardware.fingerprint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.fingerprint.xml \
+    frameworks/native/data/etc/android.hardware.biometrics.fingerprint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.biometrics.fingerprint.xml \
     frameworks/native/data/etc/android.software.autofill.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.autofill.xml \
     frameworks/native/data/etc/android.software.verified_boot.xml:system/etc/permissions/android.software.verified_boot.xml \
     frameworks/av/media/libeffects/data/audio_effects.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_effects.xml \
