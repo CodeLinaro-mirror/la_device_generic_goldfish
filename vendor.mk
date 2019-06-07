@@ -91,6 +91,7 @@ PRODUCT_PACKAGES += \
     android.hardware.gnss@1.0-impl
 endif
 
+
 PRODUCT_PACKAGES += \
     android.hardware.sensors@1.0-impl \
     android.hardware.sensors@1.0-service
@@ -136,8 +137,13 @@ PRODUCT_PACKAGES += android.hardware.thermal@2.0-service.mock
 PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/permissions/privapp-permissions-goldfish.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/privapp-permissions-goldfish.xml
 
+# Goldfish does not support ION needed for Codec 2.0
+PRODUCT_PROPERTY_OVERRIDES += \
+    debug.stagefright.ccodec=0
+
 
 PRODUCT_COPY_FILES += \
+    device/generic/goldfish/fstab.ranchu.initrd:$(TARGET_COPY_OUT_RAMDISK)/fstab.ranchu \
     device/generic/goldfish/data/etc/apns-conf.xml:data/misc/apns/apns-conf.xml \
     device/generic/goldfish/data/etc/local.prop:data/local.prop \
     device/generic/goldfish/init.ranchu-core.sh:$(TARGET_COPY_OUT_VENDOR)/bin/init.ranchu-core.sh \
