@@ -52,9 +52,6 @@ PRODUCT_PACKAGES += \
     libandroidemu \
     libOpenglCodecCommon \
     libOpenglSystemCommon \
-    libEGL_swiftshader \
-    libGLESv1_CM_swiftshader \
-    libGLESv2_swiftshader \
     libgoldfish-ril \
     qemu-props \
     gps.goldfish \
@@ -165,6 +162,7 @@ PRODUCT_PACKAGES += \
 
 # WiFi: vendor side
 PRODUCT_PACKAGES += \
+	mac80211_create_radios \
 	createns \
 	dhcpclient \
 	execns \
@@ -201,6 +199,10 @@ PRODUCT_PACKAGES += \
 # Reboot escrow
 PRODUCT_PACKAGES += \
     android.hardware.rebootescrow-service.default
+
+# Extension implementation for Jetpack WindowManager
+PRODUCT_PACKAGES += \
+    androidx.window.extensions
 
 # Goldfish does not support ION needed for Codec 2.0
 # still disable it until b/143473631 is fixed
@@ -271,3 +273,7 @@ PRODUCT_COPY_FILES += \
     hardware/google/camera/devices/EmulatedCamera/hwl/configs/emu_camera_back.json:$(TARGET_COPY_OUT_VENDOR)/etc/config/emu_camera_back.json \
     hardware/google/camera/devices/EmulatedCamera/hwl/configs/emu_camera_front.json:$(TARGET_COPY_OUT_VENDOR)/etc/config/emu_camera_front.json \
     hardware/google/camera/devices/EmulatedCamera/hwl/configs/emu_camera_depth.json:$(TARGET_COPY_OUT_VENDOR)/etc/config/emu_camera_depth.json \
+
+# Windowing settings config files
+PRODUCT_COPY_FILES += \
+    device/generic/goldfish/display_settings_freeform.xml:$(TARGET_COPY_OUT_DATA)/system/display_settings_freeform.xml
