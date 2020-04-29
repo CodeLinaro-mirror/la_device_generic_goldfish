@@ -4,6 +4,7 @@ on fs
 on early-init
     mount tracefs tracefs /sys/kernel/tracing
     mount proc proc /proc remount hidepid=2,gid=3009
+    setprop ro.hardware.egl emulation
 
 on init
     # set RLIMIT_MEMLOCK to 8MB for BPF network statistics
@@ -60,6 +61,7 @@ on zygote-start
 
 on boot
     setprop ro.hardware.egl emulation
+    setprop debug.sf.vsync_reactor 0
     setprop debug.hwui.renderer opengl
     setprop debug.hwui.renderer ${ro.kernel.qemu.uirenderer}
     setprop ro.opengles.version ${ro.kernel.qemu.opengles.version}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef TRUSTY_KEYMASTER_TRUSTY_KEYMASTER_IPC_H_
-#define TRUSTY_KEYMASTER_TRUSTY_KEYMASTER_IPC_H_
+#pragma once
 
-__BEGIN_DECLS
+#include <android/hardware/gnss/2.0/types.h>
 
-int trusty_keymaster_connect(void);
-int trusty_keymaster_call(uint32_t cmd, void* in, uint32_t in_size, uint8_t* out,
-                          uint32_t* out_size);
-void trusty_keymaster_disconnect(void);
+namespace goldfish {
+namespace ahg20 = ::android::hardware::gnss::V2_0;
 
-__END_DECLS
+namespace util {
 
-#endif  // TRUSTY_KEYMASTER_TRUSTY_KEYMASTER_IPC_H_
+int64_t nowNanos();
+
+ahg20::ElapsedRealtime makeElapsedRealtime(long long timestampNs);
+
+}  // namespace util
+}  // namespace goldfish
