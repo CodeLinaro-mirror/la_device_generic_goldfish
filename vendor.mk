@@ -54,19 +54,15 @@ PRODUCT_PACKAGES += \
     libOpenglSystemCommon \
     libgoldfish-ril \
     qemu-props \
-    gps.goldfish \
-    gps.ranchu \
     fingerprint.goldfish \
     audio.primary.goldfish \
     audio.primary.goldfish_legacy \
-    power.goldfish \
     stagefright \
-    power.ranchu \
     fingerprint.ranchu \
     android.hardware.graphics.composer@2.1-impl \
     android.hardware.graphics.composer@2.1-service \
     android.hardware.graphics.allocator@3.0-service \
-    android.hardware.graphics.mapper@3.0-impl \
+    android.hardware.graphics.mapper@3.0-impl-ranchu \
     hwcomposer.ranchu \
     toybox_vendor \
     android.hardware.audio@2.0-service \
@@ -100,21 +96,19 @@ PRODUCT_PACKAGES += \
     android.hardware.soundtrigger@2.0-impl
 
 PRODUCT_PACKAGES += \
-    android.hardware.health@2.0-service
+    android.hardware.health@2.1-service \
+    android.hardware.health@2.1-impl \
+    android.hardware.health.storage@1.0-service \
 
 PRODUCT_PACKAGES += \
-    android.hardware.keymaster@4.0-impl \
-    android.hardware.keymaster@4.0-service
+    android.hardware.keymaster@4.1-service
 
 PRODUCT_PACKAGES += \
     DisplayCutoutEmulationEmu01Overlay \
     NavigationBarMode2ButtonOverlay \
 
 ifneq ($(EMULATOR_VENDOR_NO_GNSS),true)
-PRODUCT_PACKAGES += \
-    android.hardware.gnss@1.0-service \
-    android.hardware.gnss@1.0-impl
-DEVICE_MANIFEST_FILE += device/generic/goldfish/manifest.gnss.xml
+PRODUCT_PACKAGES += android.hardware.gnss@2.0-service.ranchu
 endif
 
 ifneq ($(EMULATOR_VENDOR_NO_SENSORS),true)
@@ -132,13 +126,19 @@ PRODUCT_PACKAGES += \
     android.hardware.drm@1.3-service.widevine
 
 PRODUCT_PACKAGES += \
-    android.hardware.power@1.1-service.ranchu \
+    android.hardware.power-service.example \
 
 PRODUCT_PROPERTY_OVERRIDES += ro.control_privapp_permissions=enforce
 PRODUCT_PROPERTY_OVERRIDES += ro.hardware.power=ranchu
 PRODUCT_PROPERTY_OVERRIDES += ro.crypto.volume.filenames_mode=aes-256-cts
 
 PRODUCT_PROPERTY_OVERRIDES += persist.sys.zram_enabled=1 \
+
+PRODUCT_PACKAGES += \
+    android.hardware.dumpstate@1.1-service.example \
+
+# Prevent logcat from getting canceled early on in boot
+PRODUCT_PROPERTY_OVERRIDES += ro.logd.size=1M \
 
 ifneq ($(EMULATOR_VENDOR_NO_CAMERA),true)
 PRODUCT_PACKAGES += \
@@ -186,9 +186,17 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     android.hardware.authsecret@1.0-service
 
+# Identity
+PRODUCT_PACKAGES += \
+    android.hardware.identity-service.example
+
 # Input Classifier HAL
 PRODUCT_PACKAGES += \
     android.hardware.input.classifier@1.0-service.default
+
+# lights
+PRODUCT_PACKAGES += \
+    android.hardware.lights-service.example
 
 # power stats
 PRODUCT_PACKAGES += \
@@ -208,6 +216,10 @@ PRODUCT_PACKAGES += \
 # -qemu -append qemu.media.ccodec=<value> can override it; default 0
 #PRODUCT_PROPERTY_OVERRIDES += \
 #    debug.stagefright.ccodec=0
+
+# Enable Incremental on the device via kernel driver
+PRODUCT_PRODUCT_PROPERTIES += ro.incremental.enable=yes
+
 
 PRODUCT_COPY_FILES += \
     device/generic/goldfish/fstab.ranchu.initrd:$(TARGET_COPY_OUT_RAMDISK)/fstab.ranchu \
