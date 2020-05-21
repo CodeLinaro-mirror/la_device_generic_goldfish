@@ -2,7 +2,6 @@ on fs
     mount_all /vendor/etc/fstab.ranchu
 
 on early-init
-    mount tracefs tracefs /sys/kernel/tracing
     mount proc proc /proc remount hidepid=2,gid=3009
     setprop ro.hardware.egl emulation
 
@@ -127,6 +126,11 @@ service wifi_forwarder /vendor/bin/wifi_forwarder
     disabled
 
 service dhcpclient_rtr /vendor/bin/dhcpclient -i radio0 --no-gateway
+    user root
+    group root
+    disabled
+
+service dhcpclient_wifi /vendor/bin/dhcpclient -i wlan0 --no-gateway
     user root
     group root
     disabled
