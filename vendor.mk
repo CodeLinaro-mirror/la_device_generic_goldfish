@@ -33,6 +33,8 @@ PRODUCT_PACKAGES += \
     libOpenglCodecCommon \
     libOpenglSystemCommon \
     libgoldfish-ril \
+    libgoldfish-rild \
+    libril-goldfish-fork \
     qemu-props \
     audio.primary.goldfish \
     stagefright \
@@ -219,7 +221,7 @@ PRODUCT_PACKAGES += \
 #    debug.stagefright.ccodec=0
 
 # Enable Incremental on the device via kernel driver
-PRODUCT_PRODUCT_PROPERTIES += ro.incremental.enable=yes
+PRODUCT_PROPERTY_OVERRIDES += ro.incremental.enable=yes
 
 
 PRODUCT_COPY_FILES += \
@@ -259,8 +261,7 @@ PRODUCT_COPY_FILES += \
     device/generic/goldfish/camera/media_profiles.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_profiles_V1_0.xml \
     frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_google_audio.xml \
     frameworks/av/media/libstagefright/data/media_codecs_google_telephony.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_google_telephony.xml \
-    device/generic/goldfish/camera/media_codecs_google_video_default.xml:data/vendor/etc/media_codecs_google_video_default.xml \
-    device/generic/goldfish/camera/media_codecs_google_video_v2.xml:data/vendor/etc/media_codecs_google_video_v2.xml \
+    device/generic/goldfish/camera/media_codecs_google_video_default.xml:${TARGET_COPY_OUT_VENDOR}/etc/media_codecs_google_video.xml \
     device/generic/goldfish/camera/media_codecs.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs.xml \
     device/generic/goldfish/camera/media_codecs_performance.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_performance.xml \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
