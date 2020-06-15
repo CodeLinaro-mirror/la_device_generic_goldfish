@@ -18,6 +18,10 @@
 #
 $(call inherit-product-if-exists, frameworks/native/build/phone-xhdpi-2048-dalvik-heap.mk)
 
+PRODUCT_SOONG_NAMESPACES += \
+    device/generic/goldfish \
+    device/generic/goldfish-opengl
+
 PRODUCT_SYSTEM_EXT_PROPERTIES += ro.lockscreen.disable.default=1
 
 DISABLE_RILD_OEM_HOOK := true
@@ -52,6 +56,7 @@ PRODUCT_PACKAGES += \
     iw_vendor \
     local_time.default \
     SdkSetup \
+    EmulatorRadioConfig \
     libstagefrighthw \
     libstagefright_goldfish_vpxdec \
     libstagefright_goldfish_avcdec \
@@ -72,8 +77,7 @@ PRODUCT_PACKAGES += \
     audio.r_submix.default \
     android.hardware.audio.service \
     android.hardware.audio@6.0-impl:32 \
-    android.hardware.audio.effect@6.0-impl:32 \
-    android.hardware.soundtrigger@2.2-impl
+    android.hardware.audio.effect@6.0-impl:32
 
 PRODUCT_PACKAGES += \
     android.hardware.bluetooth@1.1-service.sim \
@@ -105,10 +109,10 @@ endif
 
 ifneq ($(EMULATOR_VENDOR_NO_SENSORS),true)
 PRODUCT_PACKAGES += \
-    android.hardware.sensors@2.0-service.multihal \
-    android.hardware.sensors@2.0-impl.ranchu
+    android.hardware.sensors@2.1-service.multihal \
+    android.hardware.sensors@2.1-impl.ranchu
 # TODO(rkir):
-# add a soong namespace and move this into a.h.sensors@2.0-impl.ranchu
+# add a soong namespace and move this into a.h.sensors@2.1-impl.ranchu
 # as prebuilt_etc. For now soong_namespace causes a build break because the fw
 # refers to our wifi HAL in random places.
 PRODUCT_COPY_FILES += \
@@ -147,6 +151,12 @@ PRODUCT_PACKAGES += \
     libgooglecamerahwl_impl \
     android.hardware.camera.provider@2.6-impl-google
 DEVICE_MANIFEST_FILE += device/generic/goldfish/manifest.camera.xml
+endif
+
+ifneq ($(EMULATOR_VENDOR_NO_SOUND_TRIGGER),true)
+PRODUCT_PACKAGES += \
+    android.hardware.soundtrigger@2.2-impl
+DEVICE_MANIFEST_FILE += device/generic/goldfish/manifest.soundtrigger.xml
 endif
 
 PRODUCT_PACKAGES += \
@@ -227,6 +237,7 @@ PRODUCT_PROPERTY_OVERRIDES += ro.incremental.enable=yes
 PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/dtb.img:dtb.img \
     device/generic/goldfish/data/etc/apns-conf.xml:data/misc/apns/apns-conf.xml \
+    device/generic/goldfish/radio/RadioConfig/radioconfig.xml:data/misc/emulator/config/radioconfig.xml \
     device/generic/goldfish/data/etc/local.prop:data/local.prop \
     device/generic/goldfish/init.ranchu-core.sh:$(TARGET_COPY_OUT_VENDOR)/bin/init.ranchu-core.sh \
     device/generic/goldfish/init.ranchu-net.sh:$(TARGET_COPY_OUT_VENDOR)/bin/init.ranchu-net.sh \
