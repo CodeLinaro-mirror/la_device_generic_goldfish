@@ -18,27 +18,11 @@
 #
 $(call inherit-product-if-exists, frameworks/native/build/phone-xhdpi-2048-dalvik-heap.mk)
 
-ifeq ($(QEMU_DISABLE_AVB),true)
-  ifeq ($(QEMU_USE_SYSTEM_EXT_PARTITIONS),true)
-    PRODUCT_COPY_FILES += \
-      device/generic/goldfish/data/etc/dummy.vbmeta.img:$(PRODUCT_OUT)/vbmeta.img \
-      device/generic/goldfish/fstab.ranchu.initrd.noavb.ex:$(TARGET_COPY_OUT_RAMDISK)/fstab.ranchu \
-      device/generic/goldfish/fstab.ranchu.noavb.ex:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.ranchu
-  else
-    PRODUCT_COPY_FILES += \
-      device/generic/goldfish/data/etc/dummy.vbmeta.img:$(PRODUCT_OUT)/vbmeta.img \
-      device/generic/goldfish/fstab.ranchu.initrd.noavb:$(TARGET_COPY_OUT_RAMDISK)/fstab.ranchu \
-      device/generic/goldfish/fstab.ranchu.noavb:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.ranchu
-  endif
-endif
+PRODUCT_SOONG_NAMESPACES += \
+    device/generic/goldfish \
+    device/generic/goldfish-opengl
 
 PRODUCT_SYSTEM_EXT_PROPERTIES += ro.lockscreen.disable.default=1
-ifeq ($(QEMU_USE_SYSTEM_EXT_PARTITIONS),true)
-PRODUCT_COPY_FILES += \
-    device/generic/goldfish/fstab.ranchu.initrd.ex:$(TARGET_COPY_OUT_RAMDISK)/fstab.ranchu \
-    device/generic/goldfish/fstab.ranchu.ex:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.ranchu
-endif
-
 
 DISABLE_RILD_OEM_HOOK := true
 
@@ -53,27 +37,26 @@ PRODUCT_PACKAGES += \
     libOpenglCodecCommon \
     libOpenglSystemCommon \
     libgoldfish-ril \
+    libgoldfish-rild \
+    libril-goldfish-fork \
     qemu-props \
-    fingerprint.goldfish \
     audio.primary.goldfish \
-    audio.primary.goldfish_legacy \
     stagefright \
     fingerprint.ranchu \
-    android.hardware.graphics.composer@2.1-impl \
-    android.hardware.graphics.composer@2.1-service \
+    android.hardware.graphics.composer@2.3-impl \
+    android.hardware.graphics.composer@2.3-service \
     android.hardware.graphics.allocator@3.0-service \
     android.hardware.graphics.mapper@3.0-impl-ranchu \
     hwcomposer.ranchu \
     toybox_vendor \
-    android.hardware.audio@2.0-service \
     android.hardware.wifi@1.0-service \
     android.hardware.biometrics.fingerprint@2.1-service \
     sh_vendor \
     ip_vendor \
     iw_vendor \
-    audio.r_submix.default \
     local_time.default \
     SdkSetup \
+    EmulatorRadioConfig \
     libstagefrighthw \
     libstagefright_goldfish_vpxdec \
     libstagefright_goldfish_avcdec \
@@ -91,14 +74,27 @@ PRODUCT_PACKAGES += \
 endif
 
 PRODUCT_PACKAGES += \
-    android.hardware.audio@5.0-impl:32 \
-    android.hardware.audio.effect@5.0-impl:32 \
-    android.hardware.soundtrigger@2.0-impl
+    audio.r_submix.default \
+    android.hardware.audio.service \
+    android.hardware.audio@6.0-impl:32 \
+    android.hardware.audio.effect@6.0-impl:32
+
+PRODUCT_PACKAGES += \
+    android.hardware.bluetooth@1.1-service.sim \
+    android.hardware.bluetooth.audio@2.0-impl
+PRODUCT_PROPERTY_OVERRIDES += bt.rootcanal_test_console=off
 
 PRODUCT_PACKAGES += \
     android.hardware.health@2.1-service \
     android.hardware.health@2.1-impl \
     android.hardware.health.storage@1.0-service \
+
+PRODUCT_PACKAGES += \
+    android.hardware.neuralnetworks@1.3-service-sample-all \
+    android.hardware.neuralnetworks@1.3-service-sample-float-fast \
+    android.hardware.neuralnetworks@1.3-service-sample-float-slow \
+    android.hardware.neuralnetworks@1.3-service-sample-minimal \
+    android.hardware.neuralnetworks@1.3-service-sample-quant
 
 PRODUCT_PACKAGES += \
     android.hardware.keymaster@4.1-service
@@ -113,10 +109,14 @@ endif
 
 ifneq ($(EMULATOR_VENDOR_NO_SENSORS),true)
 PRODUCT_PACKAGES += \
-    android.hardware.sensors@1.0-impl \
-    android.hardware.sensors@1.0-service \
-    sensors.ranchu
-DEVICE_MANIFEST_FILE += device/generic/goldfish/manifest.sensors.xml
+    android.hardware.sensors@2.1-service.multihal \
+    android.hardware.sensors@2.1-impl.ranchu
+# TODO(rkir):
+# add a soong namespace and move this into a.h.sensors@2.1-impl.ranchu
+# as prebuilt_etc. For now soong_namespace causes a build break because the fw
+# refers to our wifi HAL in random places.
+PRODUCT_COPY_FILES += \
+    device/generic/goldfish/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf
 endif
 
 PRODUCT_PACKAGES += \
@@ -145,14 +145,18 @@ PRODUCT_PACKAGES += \
     camera.device@1.0-impl \
     android.hardware.camera.provider@2.4-service \
     android.hardware.camera.provider@2.4-impl \
-    camera.goldfish \
-    camera.goldfish.jpeg \
     camera.ranchu \
     camera.ranchu.jpeg \
     android.hardware.camera.provider@2.6-service-google \
     libgooglecamerahwl_impl \
     android.hardware.camera.provider@2.6-impl-google
 DEVICE_MANIFEST_FILE += device/generic/goldfish/manifest.camera.xml
+endif
+
+ifneq ($(EMULATOR_VENDOR_NO_SOUND_TRIGGER),true)
+PRODUCT_PACKAGES += \
+    android.hardware.soundtrigger@2.2-impl
+DEVICE_MANIFEST_FILE += device/generic/goldfish/manifest.soundtrigger.xml
 endif
 
 PRODUCT_PACKAGES += \
@@ -169,6 +173,9 @@ PRODUCT_PACKAGES += \
 	netmgr \
 	wifi_forwarder \
 	wpa_supplicant \
+
+PRODUCT_PACKAGES += \
+    android.hardware.usb@1.0-service
 
 # Thermal
 PRODUCT_PACKAGES += \
@@ -210,6 +217,12 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     androidx.window.extensions
 
+PRODUCT_PACKAGES += \
+    android.hardware.biometrics.face@1.0-service.example
+
+PRODUCT_PACKAGES += \
+    android.hardware.contexthub@1.1-service.mock
+
 # Goldfish does not support ION needed for Codec 2.0
 # still disable it until b/143473631 is fixed
 # now this is setup on init.ranchu.rc
@@ -218,12 +231,13 @@ PRODUCT_PACKAGES += \
 #    debug.stagefright.ccodec=0
 
 # Enable Incremental on the device via kernel driver
-PRODUCT_PRODUCT_PROPERTIES += ro.incremental.enable=yes
+PRODUCT_PROPERTY_OVERRIDES += ro.incremental.enable=yes
 
 
 PRODUCT_COPY_FILES += \
-    device/generic/goldfish/fstab.ranchu.initrd:$(TARGET_COPY_OUT_RAMDISK)/fstab.ranchu \
+    device/generic/goldfish/data/etc/dtb.img:dtb.img \
     device/generic/goldfish/data/etc/apns-conf.xml:data/misc/apns/apns-conf.xml \
+    device/generic/goldfish/radio/RadioConfig/radioconfig.xml:data/misc/emulator/config/radioconfig.xml \
     device/generic/goldfish/data/etc/local.prop:data/local.prop \
     device/generic/goldfish/init.ranchu-core.sh:$(TARGET_COPY_OUT_VENDOR)/bin/init.ranchu-core.sh \
     device/generic/goldfish/init.ranchu-net.sh:$(TARGET_COPY_OUT_VENDOR)/bin/init.ranchu-net.sh \
@@ -249,14 +263,16 @@ PRODUCT_COPY_FILES += \
     device/generic/goldfish/wifi/simulated_hostapd.conf:$(TARGET_COPY_OUT_VENDOR)/etc/simulated_hostapd.conf \
     device/generic/goldfish/wifi/wpa_supplicant.conf:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/wpa_supplicant.conf \
     device/generic/goldfish/wifi/WifiConfigStore.xml:data/misc/wifi/WifiConfigStore.xml \
+    frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml \
+    frameworks/native/data/etc/android.hardware.bluetooth.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth.xml \
+    system/bt/vendor_libs/test_vendor_lib/data/controller_properties.json:vendor/etc/bluetooth/controller_properties.json \
     frameworks/native/data/etc/android.hardware.wifi.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.xml \
     frameworks/native/data/etc/android.hardware.wifi.direct.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.direct.xml \
     device/generic/goldfish/data/etc/handheld_core_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/handheld_core_hardware.xml \
     device/generic/goldfish/camera/media_profiles.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_profiles_V1_0.xml \
     frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_google_audio.xml \
     frameworks/av/media/libstagefright/data/media_codecs_google_telephony.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_google_telephony.xml \
-    device/generic/goldfish/camera/media_codecs_google_video_default.xml:data/vendor/etc/media_codecs_google_video_default.xml \
-    device/generic/goldfish/camera/media_codecs_google_video_v2.xml:data/vendor/etc/media_codecs_google_video_v2.xml \
+    device/generic/goldfish/camera/media_codecs_google_video_default.xml:${TARGET_COPY_OUT_VENDOR}/etc/media_codecs_google_video.xml \
     device/generic/goldfish/camera/media_codecs.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs.xml \
     device/generic/goldfish/camera/media_codecs_performance.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_performance.xml \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
