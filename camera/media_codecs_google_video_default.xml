@@ -77,7 +77,7 @@
             <Feature name="adaptive-playback" />
         </MediaCodec>
         <MediaCodec name="OMX.android.goldfish.vp9.decoder" type="video/x-vnd.on2.vp9">
-            <Limit name="size" min="96x96" max="3840x2160" />
+            <Limit name="size" min="144x144" max="3840x2160" />
             <Limit name="alignment" value="2x2" />
             <Limit name="block-size" value="16x16" />
             <Limit name="blocks-per-second" min="24" max="2073600" />
@@ -92,7 +92,7 @@
             <Feature name="adaptive-playback" />
         </MediaCodec>
         <MediaCodec name="OMX.android.goldfish.vp8.decoder" type="video/x-vnd.on2.vp8">
-            <Limit name="size" min="96x96" max="3840x2160" />
+            <Limit name="size" min="144x144" max="3840x2160" />
             <Limit name="alignment" value="2x2" />
             <Limit name="block-size" value="16x16" />
             <Limit name="blocks-per-second" min="24" max="2073600" />
