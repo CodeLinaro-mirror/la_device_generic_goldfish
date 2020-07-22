@@ -31,6 +31,7 @@ cc_binary {
         "device_port_source.cpp",
         "device_port_sink.cpp",
         "talsa.cpp",
+        "ring_buffer.cpp",
         "audio_ops.cpp",
         "util.cpp",
     ],
