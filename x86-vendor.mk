@@ -24,7 +24,7 @@ PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/x86/emulatorip:$(TARGET_COPY_OUT_VENDOR)/bin/ip
 
 
-PRODUCT_SHIPPING_API_LEVEL := 28
+PRODUCT_SHIPPING_API_LEVEL := 30
 TARGET_USES_MKE2FS := true
 
 ifeq ($(QEMU_DISABLE_AVB),true)
