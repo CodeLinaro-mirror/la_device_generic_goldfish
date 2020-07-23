@@ -25,8 +25,6 @@ PRODUCT_COPY_FILES += \
     prebuilts/qemu-kernel/arm64/$(PRODUCT_KERNEL_VERSION)/kernel-qemu2:kernel-ranchu \
     device/generic/goldfish/data/etc/advancedFeatures.ini.arm:advancedFeatures.ini \
 
-PRODUCT_SHIPPING_API_LEVEL := 30
-
 EMULATOR_VENDOR_NO_GNSS := true
 
 ifeq ($(QEMU_DISABLE_AVB),true)
