@@ -87,7 +87,7 @@
             <Limit name="measured-frame-rate-320x180" range="743-817" />
             <Limit name="measured-frame-rate-640x360" range="582-602" />
             <Limit name="measured-frame-rate-1280x720" range="237-258" />
-            <Limit name="measured-frame-rate-1920x1080" range="30-160" />
+            <Limit name="measured-frame-rate-1920x1080" range="148-151" />
             <Limit name="measured-frame-rate-3840x2160" range="30-90" />
             <Feature name="adaptive-playback" />
         </MediaCodec>
@@ -102,7 +102,7 @@
             <Limit name="measured-frame-rate-320x180" range="743-817" />
             <Limit name="measured-frame-rate-640x360" range="582-602" />
             <Limit name="measured-frame-rate-1280x720" range="237-258" />
-            <Limit name="measured-frame-rate-1920x1080" range="30-160" />
+            <Limit name="measured-frame-rate-1920x1080" range="148-151" />
             <Limit name="measured-frame-rate-3840x2160" range="30-90" />
             <Feature name="adaptive-playback" />
         </MediaCodec>
@@ -117,7 +117,7 @@
             <Limit name="measured-frame-rate-320x240" range="183-183" />
             <Limit name="measured-frame-rate-720x480" range="181-181" />
             <Limit name="measured-frame-rate-1280x720" range="182-184" />
-            <Limit name="measured-frame-rate-1920x1088" range="30-50" />
+            <Limit name="measured-frame-rate-1920x1088" range="148-151" />
             <Limit name="measured-frame-rate-2560x1440" range="30-40" />
             <Feature name="adaptive-playback" />
         </MediaCodec>
@@ -132,7 +132,7 @@
             <Limit name="measured-frame-rate-320x240" range="183-183" />
             <Limit name="measured-frame-rate-720x480" range="181-181" />
             <Limit name="measured-frame-rate-1280x720" range="121-125" />
-            <Limit name="measured-frame-rate-1920x1088" range="30-50" />
+            <Limit name="measured-frame-rate-1920x1088" range="148-151" />
             <Limit name="measured-frame-rate-2560x1440" range="30-40" />
             <Feature name="adaptive-playback" />
         </MediaCodec>
