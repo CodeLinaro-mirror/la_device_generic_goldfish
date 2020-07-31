@@ -9,3 +9,5 @@ allow dumpstate nsfs:file getattr;
 dontaudit dumpstate varrun_file:dir search;
 allow dumpstate vold:binder call;
 dontaudit dumpstate apexd:binder call;
+allow dumpstate hal_light_default:binder call;
+allow dumpstate hal_power_default:binder call;
