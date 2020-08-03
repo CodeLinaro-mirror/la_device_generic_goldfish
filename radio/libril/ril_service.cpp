@@ -16,10 +16,10 @@
 
 #define LOG_TAG "RILC"
 
-#include <android/hardware/radio/1.4/IRadio.h>
-#include <android/hardware/radio/1.4/IRadioResponse.h>
-#include <android/hardware/radio/1.4/IRadioIndication.h>
-#include <android/hardware/radio/1.4/types.h>
+#include <android/hardware/radio/1.5/IRadio.h>
+#include <android/hardware/radio/1.5/IRadioResponse.h>
+#include <android/hardware/radio/1.5/IRadioIndication.h>
+#include <android/hardware/radio/1.5/types.h>
 
 #include <android/hardware/radio/deprecated/1.0/IOemHook.h>
 
@@ -38,6 +38,7 @@
 using namespace android::hardware::radio;
 using namespace android::hardware::radio::V1_0;
 using namespace android::hardware::radio::deprecated::V1_0;
+using DataRegStateResultV1_5 = android::hardware::radio::V1_5::RegStateResult;
 using DataRegStateResultV1_4 = android::hardware::radio::V1_4::DataRegStateResult;
 using PhysicalChannelConfigV1_4 =
     android::hardware::radio::V1_4::PhysicalChannelConfig;
@@ -75,6 +76,9 @@ constexpr bool kOemHookEnabled = true;
 
 RIL_RadioFunctions *s_vendorFunctions = NULL;
 static CommandInfo *s_commands;
+
+// default mccmnc string T-Mobile
+static std::string s_mccmnc {"310260"};
 
 struct RadioImpl;
 struct OemHookImpl;
@@ -133,6 +137,8 @@ struct RadioImpl : public V1_1::IRadio {
     sp<V1_1::IRadioIndication> mRadioIndicationV1_1;
     sp<V1_4::IRadioResponse> mRadioResponseV1_4;
     sp<V1_4::IRadioIndication> mRadioIndicationV1_4;
+    sp<V1_5::IRadioResponse> mRadioResponseV1_5;
+    sp<V1_5::IRadioIndication> mRadioIndicationV1_5;
 
 
     Return<void> setResponseFunctions(
@@ -832,6 +838,13 @@ Return<void> RadioImpl::setResponseFunctions(
     if (mRadioResponseV1_4 == nullptr || mRadioIndicationV1_4 == nullptr) {
         mRadioResponseV1_4 = nullptr;
         mRadioIndicationV1_4 = nullptr;
+    }
+
+    mRadioResponseV1_5 = V1_5::IRadioResponse::castFrom(mRadioResponse).withDefault(nullptr);
+    mRadioIndicationV1_5 = V1_5::IRadioIndication::castFrom(mRadioIndication).withDefault(nullptr);
+    if (mRadioResponseV1_5 == nullptr || mRadioIndicationV1_5 == nullptr) {
+        mRadioResponseV1_5 = nullptr;
+        mRadioIndicationV1_5 = nullptr;
     }
 
     mCounterRadio[mSlotId]++;
@@ -3896,6 +3909,51 @@ int radio::getVoiceRegistrationStateResponse(int slotId,
                 voiceRegResponse.reasonForDenial = ATOI_NULL_HANDLED_DEF(resp[13], 0);
                 fillCellIdentityFromVoiceRegStateResponseString(voiceRegResponse.cellIdentity,
                         numStrings, resp);
+                // start
+                {
+                  if (radioService[slotId]->mRadioResponseV1_5 != NULL) {
+                    DataRegStateResultV1_5 dataRegResponse15 = {};
+
+                    V1_5::RegStateResult::AccessTechnologySpecificInfo::
+                        EutranRegistrationInfo eutranInfo;
+
+                    dataRegResponse15.regState =
+                        (RegState)ATOI_NULL_HANDLED_DEF(resp[0], 4);
+                    dataRegResponse15.rat =
+                        (V1_4::RadioTechnology)ATOI_NULL_HANDLED_DEF(resp[3],
+                                                                     0);
+
+                    const bool enableNR =
+                        (dataRegResponse15.rat ==
+                         (V1_4::RadioTechnology)android::hardware::radio::V1_4::
+                             RadioTechnology::NR);
+
+                    eutranInfo.nrIndicators.isEndcAvailable = enableNR ? 1 : 0;
+                    eutranInfo.nrIndicators.isDcNrRestricted = enableNR ? 0 : 1;
+                    eutranInfo.nrIndicators.isNrAvailable = enableNR ? 1 : 0;
+                    // override the NR: note, at the moment, NR_SA is not
+                    // common, so switch to NR_NSA(on top of LTE)
+                    if (enableNR) {
+                      dataRegResponse15.rat = (V1_4::RadioTechnology)android::
+                          hardware::radio::V1_4::RadioTechnology::LTE_CA;
+                    }
+
+                    RLOGD("voicereg setting registerPlmn here %s", s_mccmnc.c_str());
+                    dataRegResponse15.registeredPlmn = hidl_string(std::string(s_mccmnc));
+
+                    dataRegResponse15.accessTechnologySpecificInfo.eutranInfo(
+                        std::move(eutranInfo));
+
+                    Return<void> retStatus =
+                        radioService[slotId]
+                            ->mRadioResponseV1_5
+                            ->getVoiceRegistrationStateResponse_1_5(
+                                responseInfo, dataRegResponse15);
+                    radioService[slotId]->checkReturnStatus(retStatus);
+                    return 0;
+                  }
+                }
+                // end
             }
         } else {
             RIL_VoiceRegistrationStateResponse *voiceRegState =
@@ -3956,6 +4014,46 @@ int radio::getDataRegistrationStateResponse(int slotId,
                 dataRegResponse.maxDataCalls =  ATOI_NULL_HANDLED_DEF(resp[5], 1);
                 fillCellIdentityFromDataRegStateResponseString(dataRegResponse.cellIdentity, numStrings, resp);
 
+                if (radioService[slotId]->mRadioResponseV1_5 != NULL) {
+                  DataRegStateResultV1_5 dataRegResponse15 = {};
+
+                  V1_5::RegStateResult::AccessTechnologySpecificInfo::
+                      EutranRegistrationInfo eutranInfo;
+
+                  dataRegResponse15.regState =
+                      (RegState)ATOI_NULL_HANDLED_DEF(resp[0], 4);
+                  dataRegResponse15.rat =
+                      (V1_4::RadioTechnology)ATOI_NULL_HANDLED_DEF(resp[3], 0);
+
+                  const bool enableNR =
+                      (dataRegResponse15.rat ==
+                       (V1_4::RadioTechnology)
+                           android::hardware::radio::V1_4::RadioTechnology::NR);
+
+                  eutranInfo.nrIndicators.isEndcAvailable = enableNR ? 1 : 0;
+                  eutranInfo.nrIndicators.isDcNrRestricted = enableNR ? 0 : 1;
+                  eutranInfo.nrIndicators.isNrAvailable = enableNR ? 1 : 0;
+                  // override the NR: note, at the moment, NR_SA is not common,
+                  // so switch to NR_NSA(on top of LTE)
+                  if (enableNR) {
+                    dataRegResponse15.rat = (V1_4::RadioTechnology)
+                        android::hardware::radio::V1_4::RadioTechnology::LTE_CA;
+                  }
+
+                  RLOGD("datareg setting registerPlmn here %s", s_mccmnc.c_str());
+                  dataRegResponse15.registeredPlmn = hidl_string(std::string(s_mccmnc));
+
+                  dataRegResponse15.accessTechnologySpecificInfo.eutranInfo(
+                      std::move(eutranInfo));
+
+                  Return<void> retStatus =
+                      radioService[slotId]
+                          ->mRadioResponseV1_5
+                          ->getDataRegistrationStateResponse_1_5(
+                              responseInfo, dataRegResponse15);
+                  radioService[slotId]->checkReturnStatus(retStatus);
+                  return 0;
+                } else
                 if (radioService[slotId]->mRadioResponseV1_4 != NULL) {
                   DataRegStateResultV1_4 dataRegResponse14 = {};
                   dataRegResponse14.base.regState =
@@ -4043,6 +4141,7 @@ int radio::getOperatorResponse(int slotId,
             longName = convertCharPtrToHidlString(resp[0]);
             shortName = convertCharPtrToHidlString(resp[1]);
             numeric = convertCharPtrToHidlString(resp[2]);
+            s_mccmnc = numeric;
         }
         Return<void> retStatus = radioService[slotId]->mRadioResponse->getOperatorResponse(
                 responseInfo, longName, shortName, numeric);
