@@ -3592,7 +3592,7 @@ int query_supported_techs( ModemInfo *mdm __unused, int *supported )
     while (!at_tok_nextint(&line, &val)) {
         techs |= ( 1 << val );
     }
-    if (supported) *supported = techs;
+    if (supported) *supported = techs | MDM_LTE; /* we have LTE support already */
     return 0;
 error:
     at_response_free(p_response);
