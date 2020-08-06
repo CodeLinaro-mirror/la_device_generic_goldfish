@@ -2275,7 +2275,9 @@ Return<void> RadioImpl::iccOpenLogicalChannel(int32_t serial, const hidl_string&
     RLOGD("iccOpenLogicalChannel: serial %d", serial);
 #endif
     if (s_vendorFunctions->version < 15) {
-        dispatchString(serial, mSlotId, RIL_REQUEST_SIM_OPEN_CHANNEL, aid.c_str());
+        char tmp[256];
+        snprintf(tmp, sizeof(tmp), "%s,%d", aid.c_str(), p2);
+        dispatchString(serial, mSlotId, RIL_REQUEST_SIM_OPEN_CHANNEL, tmp);
     } else {
         RequestInfo *pRI = android::addRequestToList(serial, mSlotId, RIL_REQUEST_SIM_OPEN_CHANNEL);
         if (pRI == NULL) {

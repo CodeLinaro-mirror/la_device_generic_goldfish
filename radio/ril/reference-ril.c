@@ -1968,10 +1968,27 @@ static void requestSimOpenChannel(void *data, size_t datalen, RIL_Token t)
     char dummy;
     char *line;
 
-    const char *pdata = data ? data : EMULATOR_DUMMY_SIM_CHANNEL_NAME;
+    char *pdata = data;
+    if (pdata == NULL || datalen == 0) {
+        RLOGE("Empty data passed to requestSimOpenChannel");
+        RIL_onRequestComplete(t, RIL_E_GENERIC_FAILURE, NULL, 0);
+        return;
+    }
 
-    // Max length is 16 bytes according to 3GPP spec 27.007 section 8.45
-    if (pdata == NULL || datalen == 0 || datalen > 16) {
+    char *pch = strchr(pdata, ',');
+    if (pch) {
+        int p2 = atoi(pch+1);
+        if (p2 != 0x0 && p2 != 0xC && p2 != -1) {
+            RLOGD("%s %d data is %s p2 is invalid: 0x%x", __func__, __LINE__, pdata, p2);
+            RIL_onRequestComplete(t, RIL_E_GENERIC_FAILURE, NULL, 0);
+        }
+        *pch = '\0';
+        if (strlen(pdata) == 0) {
+            pdata = EMULATOR_DUMMY_SIM_CHANNEL_NAME;
+        }
+    }
+
+    if (strlen(pdata) > 18) {
         RLOGE("Invalid data passed to requestSimOpenChannel");
         RIL_onRequestComplete(t, RIL_E_GENERIC_FAILURE, NULL, 0);
         return;
