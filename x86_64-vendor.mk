@@ -25,6 +25,8 @@ PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/configs/gpu.config:data/misc/gceconfigs/gpu.config \
     device/generic/goldfish/data/etc/x86/emulatorip:$(TARGET_COPY_OUT_VENDOR)/bin/ip
 
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.crypto.dm_default_key.options_format.version=2
 
 PRODUCT_SHIPPING_API_LEVEL := 29
 PRODUCT_OTA_ENFORCE_VINTF_KERNEL_REQUIREMENTS := false
