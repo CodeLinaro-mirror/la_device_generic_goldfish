@@ -637,6 +637,10 @@ static void send_enroll_notice(qemu_fingerprint_device_t* qdev, int fid) {
         qdev->listener.secureid[idx] = qdev->secure_user_id;
         qdev->listener.fingerid[idx] = fid;
         saveFingerprint(&qdev->listener, idx);
+        qdev->authenticator_id = get_64bit_rand();
+        saveAuthenticatorId(
+            qdev->listener.authid_filename,
+            qdev->authenticator_id);
         qdev->listener.state = STATE_IDLE;
     }
     pthread_mutex_unlock(&qdev->lock);
