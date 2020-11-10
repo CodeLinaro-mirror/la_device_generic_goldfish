@@ -78,7 +78,12 @@ endif
 
 PRODUCT_PACKAGES += \
     android.hardware.bluetooth@1.1-service.sim \
-    android.hardware.bluetooth.audio@2.0-impl
+    android.hardware.bluetooth@1.1-service.btlinux \
+    android.hardware.bluetooth.audio@2.0-impl \
+    hciattach \
+    hciconfig \
+    hcitool \
+    sdptool
 PRODUCT_PROPERTY_OVERRIDES += bt.rootcanal_test_console=off
 
 PRODUCT_PACKAGES += \
@@ -301,6 +306,7 @@ PRODUCT_COPY_FILES += \
     hardware/google/camera/devices/EmulatedCamera/hwl/configs/emu_camera_back.json:$(TARGET_COPY_OUT_VENDOR)/etc/config/emu_camera_back.json \
     hardware/google/camera/devices/EmulatedCamera/hwl/configs/emu_camera_front.json:$(TARGET_COPY_OUT_VENDOR)/etc/config/emu_camera_front.json \
     hardware/google/camera/devices/EmulatedCamera/hwl/configs/emu_camera_depth.json:$(TARGET_COPY_OUT_VENDOR)/etc/config/emu_camera_depth.json \
+    frameworks/native/data/etc/android.hardware.usb.host.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.usb.host.xml \
 
 # Windowing settings config files
 PRODUCT_COPY_FILES += \
