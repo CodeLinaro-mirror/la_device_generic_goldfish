@@ -5,6 +5,9 @@ BOARD_VENDOR_RAMDISK_KERNEL_MODULES += \
 PRODUCT_PROPERTY_OVERRIDES += \
        vendor.rild.libpath=/vendor/lib64/libgoldfish-ril.so
 
+PRODUCT_COPY_FILES += \
+    device/generic/goldfish/data/etc/arm64/emulatorip:$(TARGET_COPY_OUT_VENDOR)/bin/ip
+
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.crypto.dm_default_key.options_format.version=2
 
