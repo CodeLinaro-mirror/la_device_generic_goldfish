@@ -15,6 +15,9 @@ PRODUCT_SHIPPING_API_LEVEL := 30
 PRODUCT_OTA_ENFORCE_VINTF_KERNEL_REQUIREMENTS := false
 TARGET_USES_MKE2FS := true
 
+PRODUCT_PROPERTY_OVERRIDES += \
+    debug.stagefright.ccodec=4
+
 # Note: the following lines need to stay at the beginning so that it can
 # take priority  and override the rules it inherit from other mk files
 # see copy file rules in core/Makefile

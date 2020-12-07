@@ -70,8 +70,11 @@ on boot
     setprop ro.opengles.version ${ro.kernel.qemu.opengles.version}
     setprop ro.zygote.disable_gl_preload 1
 
-    setprop debug.stagefright.ccodec 0
-    setprop debug.stagefright.ccodec ${ro.kernel.qemu.media.ccodec}
+# the codec property is now set in arch specific mk file
+# as 64bit arm64 image cannot work with omx, it will use c2
+# x86 and x64 continue to use omx
+#    setprop debug.stagefright.ccodec 0
+     setprop debug.stagefright.ccodec ${ro.kernel.qemu.media.ccodec}
 
     setprop dalvik.vm.heapsize 192m
     setprop dalvik.vm.heapsize ${ro.kernel.qemu.dalvik.vm.heapsize}
