@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -250,6 +251,11 @@ public:
                 }
             } else if (fds[1].revents & POLLIN) {
                 onReadAvailable();
+            } else {
+                // something not right, just sleep a bit
+                // to avoid hogging the CPU
+                using namespace std::chrono_literals;
+                std::this_thread::sleep_for(10ms);
             }
         }
         ::write(mControlSocket[kControlServer], kMonitorAckCommand, 1);
