@@ -1,0 +1,10 @@
+android_app {
+    name: "FakeSystemApp",
+    sdk_version: "current",
+    manifest:  "AndroidManifest.xml",
+    srcs: [
+        "src/**/*.java",
+    ],
+    system_ext_specific: true,
+    overrides: ["Bluetooth", "DocumentsUI", "TeleService"],
+}
