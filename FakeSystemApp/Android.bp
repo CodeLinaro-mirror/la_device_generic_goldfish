@@ -6,5 +6,5 @@ android_app {
         "src/**/*.java",
     ],
     system_ext_specific: true,
-    overrides: ["Bluetooth", "DocumentsUI", "TeleService"],
+    overrides: ["DocumentsUI"],
 }
