@@ -24,31 +24,35 @@
 
     <application
         android:label="Fake System App"
-        android:supportsRtl="true" >
+        android:supportsRtl="true"
+        >
 
         <!--
-        Main launcher activity. When extending only change the name, and keep all the
-        attributes and intent filters the same
+        FallbackHome activity is used when default launcher activity is not encryption aware.
+        Effectively replaces Settings:FallbackHome, which is needed to allow device to boot when
+        Settings is removed
         -->
-        <activity
-            android:name="com.android.fakesystemapp.HomeActivity"
-            android:launchMode="singleTask"
-            android:clearTaskOnLaunch="true"
-            android:stateNotNeeded="true"
-            android:windowSoftInputMode="adjustPan"
-            android:screenOrientation="unspecified"
-            android:configChanges="keyboard|keyboardHidden|mcc|mnc|navigation|orientation|screenSize|screenLayout|smallestScreenSize"
-            android:resizeableActivity="true"
-            android:resumeWhilePausing="true"
-          android:taskAffinity=""
-          android:directBootAware="true"
-            android:enabled="true">
+        <activity android:name="com.android.fakesystemapp.FallbackHome"
+                  android:excludeFromRecents="true"
+                  android:label=""
+                  android:screenOrientation="nosensor"
+                  android:directBootAware="true">
+            <intent-filter android:priority="-1000">
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.HOME"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <activity android:name="com.android.fakesystemapp.EmptyHomeActivity"
+                  android:excludeFromRecents="true"
+                  android:label=""
+                  android:screenOrientation="nosensor"
+                  android:enabled="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.MONKEY"/>
-                <category android:name="android.intent.category.LAUNCHER_APP" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.HOME"/>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
 
