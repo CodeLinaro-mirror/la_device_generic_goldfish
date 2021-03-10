@@ -43,21 +43,36 @@ public final class FallbackHome extends Activity {
 
     private static final String TAG = "FallbackHome";
 
-    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            maybeFinish();
-        }
-    };
+    private Handler mHandler;
+    private BroadcastReceiver mReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                maybeFinish();
+            }
+        };
+
+        mHandler = new Handler(getMainLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                maybeFinish();
+            }
+        };
+
         // TODO: consider adding logic to make screen black if not provisioned
 
         registerReceiver(mReceiver, new IntentFilter(Intent.ACTION_USER_UNLOCKED));
         maybeFinish();
+    }
+
+    @Override
+    public void onDestroy() {
+        unregisterReceiver(mReceiver);
     }
 
     private void maybeFinish() {
@@ -82,11 +97,4 @@ public final class FallbackHome extends Activity {
             }
         }
     }
-
-    private Handler mHandler = new Handler(getMainLooper()) {
-        @Override
-        public void handleMessage(Message msg) {
-            maybeFinish();
-        }
-    };
 }
