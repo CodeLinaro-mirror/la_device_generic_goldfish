@@ -63,7 +63,8 @@ PRODUCT_PACKAGES += \
     libstagefrighthw \
     libstagefright_goldfish_vpxdec \
     libstagefright_goldfish_avcdec \
-    MultiDisplayProvider
+    MultiDisplayProvider \
+    usb_modeswitch
 
 ifneq ($(BUILD_EMULATOR_OPENGL),false)
 PRODUCT_PACKAGES += \
