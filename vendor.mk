@@ -225,11 +225,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     android.hardware.rebootescrow-service.default
 
-# USB Passthru
-PRODUCT_PACKAGES += usb_modeswitch \
-                    rtl8821c_fw.bin.car \
-                    rtl8821c_config.bin.car
-
 # Extension implementation for Jetpack WindowManager
 PRODUCT_PACKAGES += \
     androidx.window.sidecar
