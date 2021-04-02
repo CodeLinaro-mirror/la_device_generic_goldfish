@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.fakesystemapp;
+package com.android.fakesystemapp.launcher;
 
 import android.app.Activity;
 

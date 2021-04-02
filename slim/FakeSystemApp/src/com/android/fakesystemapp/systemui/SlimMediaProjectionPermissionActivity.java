@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.fakesystemapp;
+package com.android.fakesystemapp.systemui;
 
 import static android.view.WindowManager.LayoutParams.SYSTEM_FLAG_HIDE_NON_SYSTEM_OVERLAY_WINDOWS;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -32,16 +31,14 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.ServiceManager;
-import android.text.BidiFormatter;
-import android.text.SpannableString;
 import android.text.TextPaint;
-import android.text.TextUtils;
-import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
+
+import com.android.fakesystemapp.R;
 
 /**
  * A  fork of systemui's MediaProjectionPermissionActivity

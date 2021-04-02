@@ -24,5 +24,7 @@
     Since slimulator removes systemui, point the framework
     at the equivalent in fakesystemapp.
   -->
-  <string name="config_mediaProjectionPermissionDialogComponent" translatable="false">com.android.fakesystemapp/.SlimMediaProjectionPermissionActivity</string>
+  <string name="config_mediaProjectionPermissionDialogComponent" translatable="false">com.android.fakesystemapp/.systemui.SlimMediaProjectionPermissionActivity</string>
+  <!-- appease the cts TelephonyProvider tests, which can have abscure failures if there is no default SMS app -->
+  <string name="default_sms_application" translatable="false">com.android.fakesystemapp</string>
 </resources>
