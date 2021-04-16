@@ -28,9 +28,8 @@
   <!-- appease the cts TelephonyProvider tests, which can have abscure failures if there is no default SMS app -->
   <string name="default_sms_application" translatable="false">com.android.fakesystemapp</string>
 
-  <!-- slimulator does not have systemUI or settings, thus no TileService or quick settings support -->
+  <!-- turn off features provided by SystemUI, which slimulator does not have -->
   <bool name="config_quickSettingsSupported">false</bool>
-
-  <!-- no systemui, thus no keyguard. -->
   <bool name="config_supportsInsecureLockScreen">false</bool>
+  <bool name="config_supportsSplitScreenMultiWindow">false</bool>
 </resources>
