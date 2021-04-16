@@ -30,4 +30,7 @@
 
   <!-- slimulator does not have systemUI or settings, thus no TileService or quick settings support -->
   <bool name="config_quickSettingsSupported">false</bool>
+
+  <!-- no systemui, thus no keyguard. -->
+  <bool name="config_supportsInsecureLockScreen">false</bool>
 </resources>
