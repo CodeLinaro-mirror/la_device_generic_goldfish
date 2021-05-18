@@ -103,6 +103,8 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
     DisplayCutoutEmulationEmu01Overlay \
+    EmulationPixel5Overlay \
+    SystemUIEmulationPixel5Overlay \
     EmulationPixel4XLOverlay \
     SystemUIEmulationPixel4XLOverlay \
     EmulationPixel4Overlay \
