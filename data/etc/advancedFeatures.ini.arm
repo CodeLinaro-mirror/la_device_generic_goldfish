@@ -17,3 +17,4 @@ Vulkan = on
 VulkanNullOptionalStrings = on
 VulkanIgnoredHandles = on
 Mac80211hwsimUserspaceManaged = on
+DeviceSkinOverlay = on
