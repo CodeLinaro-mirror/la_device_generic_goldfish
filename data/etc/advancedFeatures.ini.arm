@@ -20,4 +20,3 @@ VulkanIgnoredHandles = on
 Mac80211hwsimUserspaceManaged = on
 VirtconsoleLogcat = on
 VirtioVsockPipe = on
-DeviceSkinOverlay = on

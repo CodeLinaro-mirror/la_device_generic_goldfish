@@ -120,7 +120,7 @@ struct TinyalsaSink : public DevicePortSink {
                 mReceivedFrames += szFrames;
                 bytesToWrite -= szBytes;
             } else {
-                ALOGV("TinyalsaSink::%s:%d pcm_write was late reading "
+                ALOGW("TinyalsaSink::%s:%d pcm_write was late reading "
                       "frames, dropping %zu us of audio",
                       __func__, __LINE__,
                       size_t(1000000 * bytesToWrite / mFrameSize / mSampleRateHz));
