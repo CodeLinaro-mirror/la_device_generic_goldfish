@@ -46,8 +46,7 @@ PRODUCT_PACKAGES += \
     qemu-props \
     stagefright \
     fingerprint.ranchu \
-    android.hardware.graphics.composer@2.3-impl \
-    android.hardware.graphics.composer@2.3-service \
+    android.hardware.graphics.composer@2.4-service \
     android.hardware.graphics.allocator@3.0-service \
     android.hardware.graphics.mapper@3.0-impl-ranchu \
     hwcomposer.ranchu \
@@ -59,8 +58,6 @@ PRODUCT_PACKAGES += \
     libcodec2_goldfish_vp9dec \
     libcodec2_goldfish_avcdec \
     sh_vendor \
-    ip_vendor \
-    iw_vendor \
     local_time.default \
     SdkSetup \
     EmulatorRadioConfig \
@@ -200,13 +197,8 @@ PRODUCT_PACKAGES += \
 # WiFi: vendor side
 PRODUCT_PACKAGES += \
 	mac80211_create_radios \
-	createns \
 	dhcpclient \
-	execns \
 	hostapd \
-	hostapd_nohidl \
-	netmgr \
-	wifi_forwarder \
 	wpa_supplicant \
 
 PRODUCT_PACKAGES += \
@@ -280,7 +272,6 @@ PRODUCT_COPY_FILES += \
     device/generic/goldfish/init.qemu-adb-keys.sh:$(TARGET_COPY_OUT_SYSTEM_EXT)/bin/init.qemu-adb-keys.sh \
     device/generic/goldfish/init.ranchu-core.sh:$(TARGET_COPY_OUT_VENDOR)/bin/init.ranchu-core.sh \
     device/generic/goldfish/init.ranchu-net.sh:$(TARGET_COPY_OUT_VENDOR)/bin/init.ranchu-net.sh \
-    device/generic/goldfish/wifi/init.wifi.sh:$(TARGET_COPY_OUT_VENDOR)/bin/init.wifi.sh \
     device/generic/goldfish/init.ranchu.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/init.ranchu.rc \
     device/generic/goldfish/init.system_ext.rc:$(TARGET_COPY_OUT_SYSTEM_EXT)/etc/init/init.system_ext.rc \
     device/generic/goldfish/fstab.ranchu:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.ranchu \
@@ -307,7 +298,6 @@ PRODUCT_COPY_FILES += \
     device/generic/goldfish/wifi/wpa_supplicant.conf:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/wpa_supplicant.conf \
     frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml \
     frameworks/native/data/etc/android.hardware.bluetooth.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth.xml \
-    system/bt/vendor_libs/test_vendor_lib/data/controller_properties.json:vendor/etc/bluetooth/controller_properties.json \
     frameworks/native/data/etc/android.hardware.wifi.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.xml \
     frameworks/native/data/etc/android.hardware.wifi.passpoint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.passpoint.xml \
     frameworks/native/data/etc/android.hardware.wifi.direct.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.direct.xml \
