@@ -1,4 +1,4 @@
-<manifest version="1.0" type="device" target-level="4">
+<manifest version="1.0" type="device">
     <hal format="aidl">
         <name>android.hardware.radio.config</name>
         <fqname>IRadioConfig/default</fqname>
@@ -26,5 +26,9 @@
     <hal format="aidl">
         <name>android.hardware.radio.voice</name>
         <fqname>IRadioVoice/slot1</fqname>
+    </hal>
+    <hal format="aidl">
+        <name>android.hardware.radio.ims</name>
+        <fqname>IRadioIms/slot1</fqname>
     </hal>
 </manifest>

@@ -1,5 +1,4 @@
-//
-// Copyright (C) 2020 The Android Open Source Project
+// Copyright (C) 2021 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// this file is used to build emulator-specific program tools
+// that should only run in the emulator.
+//
+
 package {
     // See: http://go/android-license-faq
     // A large-scale-change added 'default_applicable_licenses' to import
@@ -22,25 +25,20 @@ package {
     default_applicable_licenses: ["device_generic_goldfish_license"],
 }
 
-cc_library_shared {
-    name: "android.hardware.soundtrigger@2.2-impl.ranchu",
+cc_binary {
+    name: "qemu-export-property",
     vendor: true,
-    vintf_fragments: ["android.hardware.soundtrigger@2.2-impl.ranchu.xml"],
-    relative_install_path: "hw",
-    defaults: ["hidl_defaults"],
     srcs: [
         "main.cpp",
     ],
     shared_libs: [
-        "android.hardware.soundtrigger@2.0",
-        "android.hardware.soundtrigger@2.1",
-        "android.hardware.soundtrigger@2.2",
         "libbase",
-        "libcutils",
-        "libhidlbase",
-        "libutils",
+        "liblog",
+    ],
+    static_libs: [
+        "libfstab",
     ],
     cflags: [
-        "-DLOG_TAG=\"android.hardware.soundtrigger@2.2-impl.ranchu\"",
+        "-DLOG_TAG=\"qemu-export-property\"",
     ],
 }
