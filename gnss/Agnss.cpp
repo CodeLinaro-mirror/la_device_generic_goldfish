@@ -16,37 +16,36 @@
 
 #include "Agnss.h"
 
-namespace goldfish {
+namespace aidl {
+namespace android {
+namespace hardware {
+namespace gnss {
+namespace implementation {
 
-Return<void> AGnss20::setCallback(const sp<ahg20::IAGnssCallback>& callback) {
-    (void)callback;
-    return {};
+ndk::ScopedAStatus AGnss::setCallback(const std::shared_ptr<IAGnssCallback>& /*callback*/) {
+    return ndk::ScopedAStatus::ok();
 }
 
-Return<bool> AGnss20::dataConnClosed() {
-    return false;
+ndk::ScopedAStatus AGnss::dataConnClosed() {
+    return ndk::ScopedAStatus::ok();
 }
 
-Return<bool> AGnss20::dataConnFailed() {
-    return false;
+ndk::ScopedAStatus AGnss::dataConnFailed() {
+    return ndk::ScopedAStatus::ok();
 }
 
-Return<bool> AGnss20::setServer(ahg20::IAGnssCallback::AGnssType type,
-                                const hidl_string& hostname,
-                                int32_t port) {
-    (void)type;
-    (void)hostname;
-    (void)port;
-    return true;
+ndk::ScopedAStatus AGnss::setServer(AGnssType /*type*/, const std::string& /*hostname*/,
+                                    int /*port*/) {
+    return ndk::ScopedAStatus::ok();
 }
 
-Return<bool> AGnss20::dataConnOpen(uint64_t networkHandle,
-                                   const hidl_string& apn,
-                                   ahg20::IAGnss::ApnIpType apnIpType) {
-    (void)networkHandle;
-    (void)apn;
-    (void)apnIpType;
-    return false;
+ndk::ScopedAStatus AGnss::dataConnOpen(int64_t /*networkHandle*/, const std::string& /*apn*/,
+                                       ApnIpType /*apnIpType*/) {
+    return ndk::ScopedAStatus::ok();
 }
 
-}  // namespace goldfish
+}  // namespace implementation
+}  // namespace gnss
+}  // namespace hardware
+}  // namespace android
+}  // namespace aidl
