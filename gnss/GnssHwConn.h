@@ -15,25 +15,30 @@
  */
 
 #pragma once
-#include <android-base/unique_fd.h>
 #include <future>
 #include <mutex>
 #include <thread>
-#include <android/hardware/gnss/2.0/IGnssCallback.h>
 
-namespace goldfish {
+#include <android-base/unique_fd.h>
+
+#include <aidl/android/hardware/gnss/IGnssCallback.h>
+
+#include "IDataSink.h"
+
+namespace aidl {
+namespace android {
+namespace hardware {
+namespace gnss {
+namespace implementation {
+
 using ::android::base::unique_fd;
-using ::android::hardware::gnss::V2_0::IGnssCallback;
-using ::android::sp;
 
 class GnssHwConn {
 public:
-    explicit GnssHwConn(sp<IGnssCallback> callback);
+    GnssHwConn(IDataSink&);
     ~GnssHwConn();
 
     bool ok() const;
-    bool start();
-    bool stop();
 
 private:
     bool sendWorkerThreadCommand(char cmd) const;
@@ -43,4 +48,8 @@ private:
     std::thread mThread;
 };
 
-}  // namespace goldfish
+}  // namespace implementation
+}  // namespace gnss
+}  // namespace hardware
+}  // namespace android
+}  // namespace aidl
