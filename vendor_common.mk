@@ -39,7 +39,6 @@ PRODUCT_VENDOR_PROPERTIES += \
     ro.hardware.audio.tinyalsa.period_size_multiplier=2 \
     ro.hardware.audio.tinyalsa.host_latency_ms=80 \
     ro.hardware.power=ranchu \
-    ro.hardware.vulkan=ranchu \
     ro.incremental.enable=yes \
     ro.logd.size=1M \
     ro.kernel.qemu=1 \
@@ -216,7 +215,6 @@ PRODUCT_COPY_FILES += \
     device/generic/goldfish/camera/media/codecs.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs.xml \
     device/generic/goldfish/camera/media/codecs_performance.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_performance.xml \
     device/generic/goldfish/camera/media/codecs_performance_c2.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_performance_c2.xml \
-    frameworks/native/data/etc/android.hardware.camera.ar.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.ar.xml \
     frameworks/native/data/etc/android.hardware.camera.flash-autofocus.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.flash-autofocus.xml \
     frameworks/native/data/etc/android.hardware.camera.concurrent.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.concurrent.xml \
     frameworks/native/data/etc/android.hardware.camera.front.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.front.xml \
@@ -266,9 +264,7 @@ PRODUCT_PACKAGES += \
     android.hardware.health-service.example \
     android.hardware.health.storage-service.default \
     android.hardware.lights-service.example \
-    android.hardware.neuralnetworks-shim-service-sample \
-    android.hardware.neuralnetworks-service-sample-all \
-    android.hardware.neuralnetworks-service-sample-limited \
+    com.android.hardware.neuralnetworks \
     android.hardware.power-service.example \
     android.hardware.power.stats-service.example \
     android.hardware.rebootescrow-service.default \
@@ -335,8 +331,10 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.software.verified_boot.xml:${TARGET_COPY_OUT_PRODUCT}/etc/permissions/android.software.verified_boot.xml \
     device/generic/goldfish/data/etc/permissions/privapp-permissions-goldfish.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/permissions/privapp-permissions-goldfish.xml \
 
+ifneq ($(EMULATOR_DISABLE_RADIO),true)
 # Android TV ingests this file, but declares its own set of hardware permissions.
 ifneq ($(PRODUCT_IS_ATV_SDK),true)
     PRODUCT_COPY_FILES+= \
         device/generic/goldfish/data/etc/handheld_core_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/handheld_core_hardware.xml
+endif
 endif
