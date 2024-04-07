@@ -57,12 +57,9 @@ on init
     start qemu-props
 
 on post-fs-data
-    mkdir /data/vendor/adb 0755 root root
-    mkdir /data/vendor/devicestate 0755 root root
     mkdir /data/vendor/var 0755 root root
     mkdir /data/vendor/var/run 0755 root root
 
-    start qemu-adb-keys
     start qemu-device-state
 
 on zygote-start
@@ -91,11 +88,11 @@ service ranchu-setup /vendor/bin/init.ranchu-core.sh
     oneshot
     disabled
 
-service qemu-adb-setup /system_ext/bin/init.qemu-adb-keys.sh
-    class core
-    user root
+service ranchu-adb-setup /system_ext/bin/init.ranchu.adb.setup.sh
+    user system
     group shell
-    disabled  # Started when qemu-adb-keys is stopped
+    stdio_to_kmsg
+    disabled
     oneshot
 
 on property:vendor.qemu.vport.gnss=*
@@ -106,7 +103,7 @@ on property:vendor.qemu.timezone=*
 
 on property:dev.bootcomplete=1 && property:vendor.qemu.dev.bootcomplete=0
     setprop vendor.qemu.dev.bootcomplete 1
-    start adbd
+    start ranchu-adb-setup
     start qemu-props-bootcomplete
     start ranchu-setup
 
@@ -148,17 +145,12 @@ service qemu-props-bootcomplete /vendor/bin/qemu-props "bootcomplete"
     oneshot
     disabled
 
-service qemu-adb-keys /vendor/bin/qemu-export-property qemu.adb.pubkey /data/vendor/adb/adb_keys
+service qemu-device-state /vendor/bin/init_ranchu_device_state.sh
     user root
     group root
     oneshot
     disabled
-
-service qemu-device-state /vendor/bin/qemu-export-property -f qemu.device_state /data/vendor/devicestate/device_state_configuration.xml
-    user root
-    group root
-    oneshot
-    disabled
+    stdio_to_kmsg
 
 service goldfish-logcat /system/bin/logcat -f /dev/hvc1 ${ro.boot.logcat}
     class main
