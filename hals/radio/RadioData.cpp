@@ -89,7 +89,7 @@ bool setInterfaceState(const char* interfaceName, const bool on) {
                          interfaceName, strerror(errno), errno);
     }
 
-    if (((request.ifr_flags & IFF_UP) != 0) == on) {
+    if (((request.ifr_flags & IFF_UP) != 0) != on) {
         ::close(sock);
         return true;  // Interface already in desired state
     }
@@ -126,22 +126,22 @@ bool setIpAddr(const char *addr, const int addrSize,
         sin->sin_family = AF_INET;
         sin->sin_addr.s_addr = inet_addr(addr);
         if (ioctl(sock, SIOCSIFADDR, &req4) < 0) {
-            ::close(sock);
-            return FAILURE_V(false, "SIOCSIFADDR IPv4 failed: %s (%d)",
-                             strerror(errno), errno);
+            //::close(sock);
+            //return FAILURE_V(false, "SIOCSIFADDR IPv4 failed: %s (%d)",
+            //                 strerror(errno), errno);
         }
 
         sin->sin_addr.s_addr = htonl(0xFFFFFFFFu << (32 - (addrSize ? addrSize : 32)));
         if (ioctl(sock, SIOCSIFNETMASK, &req4) < 0) {
-            ::close(sock);
-            return FAILURE_V(false, "SIOCSIFNETMASK IPv4 failed: %s (%d)",
-                             strerror(errno), errno);
+            //::close(sock);
+            //return FAILURE_V(false, "SIOCSIFNETMASK IPv4 failed: %s (%d)",
+            //                 strerror(errno), errno);
         }
     } else {
         if (ioctl(sock, SIOCGIFINDEX, &req4) < 0) {
-            ::close(sock);
-            return FAILURE_V(false, "SIOCGIFINDEX IPv6 failed: %s (%d)",
-                             strerror(errno), errno);
+            //::close(sock);
+            //return FAILURE_V(false, "SIOCGIFINDEX IPv6 failed: %s (%d)",
+            //                 strerror(errno), errno);
         }
 
         struct in6_ifreq req6 = {
@@ -156,9 +156,9 @@ bool setIpAddr(const char *addr, const int addrSize,
         }
 
         if (ioctl(sock, SIOCSIFADDR, &req6) < 0) {
-            ::close(sock);
-            return FAILURE_V(false, "SIOCSIFADDR failed: %s (%d)",
-                             strerror(errno), errno);
+            //::close(sock);
+            //return FAILURE_V(false, "SIOCSIFADDR failed: %s (%d)",
+            //                 strerror(errno), errno);
         }
     }
 
@@ -244,9 +244,6 @@ ScopedAStatus RadioData::setupDataCall(const int32_t serial,
     static const char* const kFunc = __func__;
     mAtChannel->queueRequester([this, serial, dataProfileInfo, pduSessionId]
                                (const AtChannel::RequestPipe requestPipe) -> bool {
-        using CmeError = AtResponse::CmeError;
-        using CGCONTRDP = AtResponse::CGCONTRDP;
-
         RadioError status;
         const int32_t cid = allocateId();
 
@@ -265,22 +262,21 @@ failed:     releaseId(cid);
             mAtConversation(requestPipe, request,
                             [](const AtResponse& response) -> bool {
                                return response.holds<AtResponse::OK>() ||
-                                      response.holds<CmeError>();
+                                      response.holds<AtResponse::CmeError>();
                             });
         if (!response) {
             status = FAILURE(RadioError::INTERNAL_ERR);
             goto failed;
-        } else if (const CmeError* err = response->get_if<CmeError>()) {
-            status = FAILURE_V(err->error, "%s",  toString(err->error).c_str());
+        } else if (response->holds<AtResponse::CmeError>()) {
+            status = FAILURE_V(RadioError::GENERIC_FAILURE, "'%s' failed", request.c_str());
             goto failed;
         } else if (!response->holds<AtResponse::OK>()) {
             response->unexpected(FAILURE_DEBUG_PREFIX, kFunc);
         }
 
         SetupDataCallResult setupDataCallResult = {
-            .suggestedRetryTime = -1,
             .cid = cid,
-            .active = SetupDataCallResult::DATA_CONNECTION_STATUS_INACTIVE,
+            .active = SetupDataCallResult::DATA_CONNECTION_STATUS_ACTIVE,
             .type = dataProfileInfo.protocol,
             .ifname = kInterfaceName,
             .mtuV4 = 1500,
@@ -293,13 +289,13 @@ failed:     releaseId(cid);
         response =
             mAtConversation(requestPipe, request,
                             [](const AtResponse& response) -> bool {
-                               return response.holds<CGCONTRDP>() ||
-                                      response.holds<CmeError>();
+                               return response.holds<AtResponse::CGCONTRDP>() ||
+                                      response.holds<AtResponse::CmeError>();
                             });
         if (!response || response->isParseError()) {
             status = FAILURE(RadioError::INTERNAL_ERR);
             goto failed;
-        } else if (const CGCONTRDP* cgcontrdp = response->get_if<CGCONTRDP>()) {
+        } else if (const AtResponse::CGCONTRDP* cgcontrdp = response->get_if<AtResponse::CGCONTRDP>()) {
             if (!setIpAddr(cgcontrdp->localAddr.c_str(),
                            cgcontrdp->localAddrSize,
                            setupDataCallResult.ifname.c_str())) {
@@ -307,18 +303,16 @@ failed:     releaseId(cid);
                 goto failed;
             }
 
-            const auto makeLinkAddress = [](const std::string_view address,
-                                            const size_t addrSize) -> data::LinkAddress {
+            const auto makeLinkAddress = [](std::string address) -> data::LinkAddress {
                 return {
-                    .address = std::format("{0:s}/{1:d}", address, addrSize),
+                    .address = std::move(address),
                     .addressProperties = 0,
                     .deprecationTime = -1,
                     .expirationTime = -1,
                 };
             };
 
-            setupDataCallResult.addresses.push_back(
-                makeLinkAddress(cgcontrdp->localAddr, cgcontrdp->localAddrSize));
+            setupDataCallResult.addresses.push_back(makeLinkAddress(cgcontrdp->localAddr));
             setupDataCallResult.gateways.push_back(cgcontrdp->gwAddr);
             setupDataCallResult.dnses.push_back(cgcontrdp->dns1);
             if (!cgcontrdp->dns2.empty()) {
@@ -328,8 +322,8 @@ failed:     releaseId(cid);
             std::lock_guard<std::mutex> lock(mMtx);
             mDataCalls.insert({ cid, setupDataCallResult });
             status = RadioError::NONE;
-        } else if (const CmeError* err = response->get_if<CmeError>()) {
-            status = FAILURE_V(err->error, "%s",  toString(err->error).c_str());
+        } else if (const AtResponse::CmeError* err = response->get_if<AtResponse::CmeError>()) {
+            status = FAILURE(RadioError::GENERIC_FAILURE);
             goto failed;
         } else {
             response->unexpected(FAILURE_DEBUG_PREFIX, kFunc);
@@ -337,6 +331,10 @@ failed:     releaseId(cid);
 
         NOT_NULL(mRadioDataResponse)->setupDataCallResponse(
             makeRadioResponseInfo(serial), std::move(setupDataCallResult));
+
+        NOT_NULL(mRadioDataIndication)->dataCallListChanged(
+            RadioIndicationType::UNSOLICITED, getDataCalls());
+
         return true;
     });
 
@@ -347,7 +345,6 @@ ScopedAStatus RadioData::deactivateDataCall(
         const int32_t serial, const int32_t cid,
         const data::DataRequestReason /*reason*/) {
     bool removed;
-    bool empty;
     {
         std::lock_guard<std::mutex> lock(mMtx);
         const auto i = mDataCalls.find(cid);
@@ -358,16 +355,14 @@ ScopedAStatus RadioData::deactivateDataCall(
         } else {
             removed = false;
         }
-        empty = mDataCalls.empty();
-    }
-
-    if (empty) {
-        setInterfaceState(kInterfaceName, false);
     }
 
     if (removed) {
         NOT_NULL(mRadioDataResponse)->deactivateDataCallResponse(
             makeRadioResponseInfo(serial));
+
+        NOT_NULL(mRadioDataIndication)->dataCallListChanged(
+            RadioIndicationType::UNSOLICITED, getDataCalls());
     } else {
         NOT_NULL(mRadioDataResponse)->deactivateDataCallResponse(
             makeRadioResponseInfo(serial, FAILURE(RadioError::INVALID_ARGUMENTS)));

@@ -149,11 +149,9 @@ PRODUCT_PACKAGES += \
     libGLESv2_angle
 endif
 
-ifneq ($(EMULATOR_VENDOR_NO_THREADNETWORK), true)
 # Enable Thread Network HAL with simulation RCP
 PRODUCT_PACKAGES += \
     com.android.hardware.threadnetwork-simulation-rcp
-endif
 
 # Enable bluetooth
 PRODUCT_PACKAGES += \
@@ -240,6 +238,7 @@ endif
 # WiFi: vendor side
 PRODUCT_PACKAGES += \
     mac80211_create_radios \
+    dhcpclient \
     hostapd \
     wpa_supplicant \
 
