@@ -117,6 +117,8 @@ struct RadioNetwork : public network::BnRadioNetwork {
             const std::shared_ptr<network::IRadioNetworkIndication>& radioNetworkIndication) override;
 
 private:
+    static RadioError validateNetworkScanRequest(const network::NetworkScanRequest&);
+
     const std::shared_ptr<AtChannel> mAtChannel;
     AtChannel::Conversation mAtConversation;
     std::shared_ptr<network::IRadioNetworkResponse> mRadioNetworkResponse;
@@ -131,6 +133,7 @@ private:
     AtResponse::CTZV    mCtzv;
     int64_t             mCtzvTimestamp;
     modem::RadioState   mRadioState = modem::RadioState::OFF;
+    network::UsageSetting mUsageSetting = network::UsageSetting::VOICE_CENTRIC;
     int                 mPrimaryBandwidth = 0;
     int                 mSecondaryBandwidth = 0;
     bool                mNullCipherAndIntegrityEnabled = false;
