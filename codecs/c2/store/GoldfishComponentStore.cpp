@@ -29,18 +29,17 @@ namespace android {
 
 // static
 std::shared_ptr<C2ComponentStore> GoldfishComponentStore::Create() {
-    ALOGI("%s()", __func__);
-
     static std::mutex mutex;
-    static std::weak_ptr<C2ComponentStore> platformStore;
+    static std::weak_ptr<C2ComponentStore> cachedStore;
 
     std::lock_guard<std::mutex> lock(mutex);
-    std::shared_ptr<C2ComponentStore> store = platformStore.lock();
-    if (store != nullptr)
+    std::shared_ptr<C2ComponentStore> store = cachedStore.lock();
+    if (store) {
         return store;
+    }
 
-    store = std::shared_ptr<C2ComponentStore>(new GoldfishComponentStore());
-    platformStore = store;
+    store = std::make_shared<GoldfishComponentStore>();
+    cachedStore = store;
     return store;
 }
 
@@ -48,144 +47,139 @@ C2String GoldfishComponentStore::getName() const {
     return "android.componentStore.goldfish";
 }
 
-c2_status_t GoldfishComponentStore::ComponentModule::init(std::string libPath) {
-    ALOGI("in %s", __func__);
-    ALOGI("loading dll of path %s", libPath.c_str());
-    mLibHandle = dlopen(libPath.c_str(), RTLD_NOW | RTLD_NODELETE);
-    LOG_ALWAYS_FATAL_IF(mLibHandle == nullptr, "could not dlopen %s: %s",
-                        libPath.c_str(), dlerror());
+c2_status_t GoldfishComponentStore::ComponentModule::init(const char* libPath) {
+    ALOGI("loading dll of path %s", libPath);
+    mLibHandle = dlopen(libPath, RTLD_NOW | RTLD_NODELETE);
+    LOG_ALWAYS_FATAL_IF(!mLibHandle, "could not dlopen %s: %s", libPath, dlerror());
 
-    createFactory = (C2ComponentFactory::CreateCodec2FactoryFunc)dlsym(
-        mLibHandle, "CreateCodec2Factory");
-    LOG_ALWAYS_FATAL_IF(createFactory == nullptr, "createFactory is null in %s",
-                        libPath.c_str());
+    const C2ComponentFactory::CreateCodec2FactoryFunc
+            createFactory = (C2ComponentFactory::CreateCodec2FactoryFunc)dlsym(
+                    mLibHandle, "CreateCodec2Factory");
+    LOG_ALWAYS_FATAL_IF(!createFactory, "createFactory is null in %s", libPath);
 
-    destroyFactory = (C2ComponentFactory::DestroyCodec2FactoryFunc)dlsym(
+    mDestroyFactory = (C2ComponentFactory::DestroyCodec2FactoryFunc)dlsym(
         mLibHandle, "DestroyCodec2Factory");
-    LOG_ALWAYS_FATAL_IF(destroyFactory == nullptr,
-                        "destroyFactory is null in %s", libPath.c_str());
+    LOG_ALWAYS_FATAL_IF(!mDestroyFactory, "destroyFactory is null in %s", libPath);
 
     mComponentFactory = createFactory();
-    if (mComponentFactory == nullptr) {
-        ALOGD("could not create factory in %s", libPath.c_str());
-        mInit = C2_NO_MEMORY;
-    } else {
-        mInit = C2_OK;
-    }
-
-    if (mInit != C2_OK) {
-        return mInit;
+    if (!mComponentFactory) {
+        ALOGD("could not create factory in %s", libPath);
+        return C2_NO_MEMORY;
     }
 
     std::shared_ptr<C2ComponentInterface> intf;
     c2_status_t res = createInterface(0, &intf);
     if (res != C2_OK) {
         ALOGD("failed to create interface: %d", res);
-        return mInit;
+        return res;
     }
 
-    std::shared_ptr<C2Component::Traits> traits(new (std::nothrow)
-                                                    C2Component::Traits);
-    if (traits) {
-        traits->name = intf->getName();
+    std::tie(res, mTraits) = buildTraits(*intf);
+    return res;
+}
 
-        C2ComponentKindSetting kind;
-        C2ComponentDomainSetting domain;
-        res = intf->query_vb({&kind, &domain}, {}, C2_MAY_BLOCK, nullptr);
-        bool fixDomain = res != C2_OK;
-        if (res == C2_OK) {
-            traits->kind = kind.value;
-            traits->domain = domain.value;
+std::pair<c2_status_t, std::shared_ptr<C2Component::Traits>>
+GoldfishComponentStore::ComponentModule::buildTraits(
+        const C2ComponentInterface& intf) {
+    const auto traits = std::make_shared<C2Component::Traits>();
+    traits->name = intf.getName();
+
+    C2ComponentKindSetting kind;
+    C2ComponentDomainSetting domain;
+    c2_status_t res = intf.query_vb({&kind, &domain}, {}, C2_MAY_BLOCK, nullptr);
+    const bool fixDomain = res != C2_OK;
+    if (res == C2_OK) {
+        traits->kind = kind.value;
+        traits->domain = domain.value;
+    } else {
+        // TODO: remove this fall-back
+        ALOGD("failed to query interface for kind and domain: %d", res);
+
+        traits->kind = (traits->name.find("encoder") != std::string::npos)
+                           ? C2Component::KIND_ENCODER
+                       : (traits->name.find("decoder") != std::string::npos)
+                           ? C2Component::KIND_DECODER
+                           : C2Component::KIND_OTHER;
+    }
+
+    const uint32_t mediaTypeIndex =
+        (traits->kind == C2Component::KIND_ENCODER)
+            ? C2PortMediaTypeSetting::output::PARAM_TYPE
+            : C2PortMediaTypeSetting::input::PARAM_TYPE;
+
+    std::vector<std::unique_ptr<C2Param>> params;
+    res = intf.query_vb({}, {mediaTypeIndex}, C2_MAY_BLOCK, &params);
+    if (res != C2_OK) {
+        ALOGD("failed to query interface: %d", res);
+        return {res, {}};
+    }
+    if (params.size() != 1u) {
+        ALOGD("failed to query interface: unexpected vector size: %zu",
+              params.size());
+        return {C2_NO_INIT, {}};
+    }
+
+    C2PortMediaTypeSetting *mediaTypeConfig =
+        C2PortMediaTypeSetting::From(params[0].get());
+    if (mediaTypeConfig == nullptr) {
+        ALOGD("failed to query media type");
+        return {C2_NO_INIT, {}};
+    }
+    traits->mediaType = std::string(
+        mediaTypeConfig->m.value,
+        strnlen(mediaTypeConfig->m.value, mediaTypeConfig->flexCount()));
+
+    if (fixDomain) {
+        if (strncmp(traits->mediaType.c_str(), "audio/", 6) == 0) {
+            traits->domain = C2Component::DOMAIN_AUDIO;
+        } else if (strncmp(traits->mediaType.c_str(), "video/", 6) == 0) {
+            traits->domain = C2Component::DOMAIN_VIDEO;
+        } else if (strncmp(traits->mediaType.c_str(), "image/", 6) == 0) {
+            traits->domain = C2Component::DOMAIN_IMAGE;
         } else {
-            // TODO: remove this fall-back
-            ALOGD("failed to query interface for kind and domain: %d", res);
-
-            traits->kind = (traits->name.find("encoder") != std::string::npos)
-                               ? C2Component::KIND_ENCODER
-                           : (traits->name.find("decoder") != std::string::npos)
-                               ? C2Component::KIND_DECODER
-                               : C2Component::KIND_OTHER;
-        }
-
-        uint32_t mediaTypeIndex =
-            traits->kind == C2Component::KIND_ENCODER
-                ? C2PortMediaTypeSetting::output::PARAM_TYPE
-                : C2PortMediaTypeSetting::input::PARAM_TYPE;
-        std::vector<std::unique_ptr<C2Param>> params;
-        res = intf->query_vb({}, {mediaTypeIndex}, C2_MAY_BLOCK, &params);
-        if (res != C2_OK) {
-            ALOGD("failed to query interface: %d", res);
-            return mInit;
-        }
-        if (params.size() != 1u) {
-            ALOGD("failed to query interface: unexpected vector size: %zu",
-                  params.size());
-            return mInit;
-        }
-        C2PortMediaTypeSetting *mediaTypeConfig =
-            C2PortMediaTypeSetting::From(params[0].get());
-        if (mediaTypeConfig == nullptr) {
-            ALOGD("failed to query media type");
-            return mInit;
-        }
-        traits->mediaType = std::string(
-            mediaTypeConfig->m.value,
-            strnlen(mediaTypeConfig->m.value, mediaTypeConfig->flexCount()));
-
-        if (fixDomain) {
-            if (strncmp(traits->mediaType.c_str(), "audio/", 6) == 0) {
-                traits->domain = C2Component::DOMAIN_AUDIO;
-            } else if (strncmp(traits->mediaType.c_str(), "video/", 6) == 0) {
-                traits->domain = C2Component::DOMAIN_VIDEO;
-            } else if (strncmp(traits->mediaType.c_str(), "image/", 6) == 0) {
-                traits->domain = C2Component::DOMAIN_IMAGE;
-            } else {
-                traits->domain = C2Component::DOMAIN_OTHER;
-            }
-        }
-
-        // TODO: get this properly from the store during emplace
-        switch (traits->domain) {
-        case C2Component::DOMAIN_AUDIO:
-            traits->rank = 8;
-            break;
-        default:
-            traits->rank = 512;
-        }
-
-        params.clear();
-        res = intf->query_vb({}, {C2ComponentAliasesSetting::PARAM_TYPE},
-                             C2_MAY_BLOCK, &params);
-        if (res == C2_OK && params.size() == 1u) {
-            C2ComponentAliasesSetting *aliasesSetting =
-                C2ComponentAliasesSetting::From(params[0].get());
-            if (aliasesSetting) {
-                // Split aliases on ','
-                // This looks simpler in plain C and even std::string would
-                // still make a copy.
-                char *aliases = ::strndup(aliasesSetting->m.value,
-                                          aliasesSetting->flexCount());
-                ALOGD("'%s' has aliases: '%s'", intf->getName().c_str(),
-                      aliases);
-
-                for (char *tok, *ptr, *str = aliases;
-                     (tok = ::strtok_r(str, ",", &ptr)); str = nullptr) {
-                    traits->aliases.push_back(tok);
-                    ALOGD("adding alias: '%s'", tok);
-                }
-                free(aliases);
-            }
+            traits->domain = C2Component::DOMAIN_OTHER;
         }
     }
-    mTraits = traits;
 
-    return mInit;
+    // TODO: get this properly from the store during emplace
+    switch (traits->domain) {
+    case C2Component::DOMAIN_AUDIO:
+        traits->rank = 8;
+        break;
+    default:
+        traits->rank = 512;
+    }
+
+    params.clear();
+    res = intf.query_vb({}, {C2ComponentAliasesSetting::PARAM_TYPE},
+                         C2_MAY_BLOCK, &params);
+    if (res == C2_OK && params.size() == 1u) {
+        C2ComponentAliasesSetting *aliasesSetting =
+            C2ComponentAliasesSetting::From(params[0].get());
+        if (aliasesSetting) {
+            // Split aliases on ','
+            // This looks simpler in plain C and even std::string would
+            // still make a copy.
+            char *aliases = ::strndup(aliasesSetting->m.value,
+                                      aliasesSetting->flexCount());
+            ALOGD("'%s' has aliases: '%s'", intf.getName().c_str(), aliases);
+
+            for (char *tok, *ptr, *str = aliases;
+                 (tok = ::strtok_r(str, ",", &ptr)); str = nullptr) {
+                traits->aliases.push_back(tok);
+                ALOGD("adding alias: '%s'", tok);
+            }
+            free(aliases);
+        }
+    }
+
+    return {C2_OK, std::move(traits)};
 }
 
 GoldfishComponentStore::ComponentModule::~ComponentModule() {
-    ALOGI("in %s", __func__);
-    if (destroyFactory && mComponentFactory) {
-        destroyFactory(mComponentFactory);
+    if (mComponentFactory) {
+        LOG_ALWAYS_FATAL_IF(!mDestroyFactory);
+        mDestroyFactory(mComponentFactory);
     }
     if (mLibHandle) {
         ALOGI("unloading dll");
@@ -194,47 +188,53 @@ GoldfishComponentStore::ComponentModule::~ComponentModule() {
 }
 
 c2_status_t GoldfishComponentStore::ComponentModule::createInterface(
-    c2_node_id_t id, std::shared_ptr<C2ComponentInterface> *interface,
-    std::function<void(::C2ComponentInterface *)> deleter) {
-    interface->reset();
-    if (mInit != C2_OK) {
-        return mInit;
-    }
+        c2_node_id_t id, std::shared_ptr<C2ComponentInterface> *interface,
+        std::function<void(::C2ComponentInterface *)> deleter) {
     std::shared_ptr<ComponentModule> module = shared_from_this();
     c2_status_t res = mComponentFactory->createInterface(
-        id, interface, [module, deleter](C2ComponentInterface *p) mutable {
+        id, interface, [module, deleter](C2ComponentInterface *p) {
             // capture module so that we ensure we still have it while deleting
             // interface
             deleter(p);     // delete interface first
-            module.reset(); // remove module ref (not technically needed)
         });
     ALOGI("created interface");
     return res;
 }
 
 c2_status_t GoldfishComponentStore::ComponentModule::createComponent(
-    c2_node_id_t id, std::shared_ptr<C2Component> *component,
-    std::function<void(::C2Component *)> deleter) {
-    component->reset();
-    if (mInit != C2_OK) {
-        return mInit;
-    }
+        c2_node_id_t id, std::shared_ptr<C2Component> *component,
+        std::function<void(::C2Component *)> deleter) {
     std::shared_ptr<ComponentModule> module = shared_from_this();
     c2_status_t res = mComponentFactory->createComponent(
-        id, component, [module, deleter](C2Component *p) mutable {
+        id, component, [module, deleter](C2Component *p) {
             // capture module so that we ensure we still have it while deleting
             // component
-            deleter(p);     // delete component first
-            module.reset(); // remove module ref (not technically needed)
+            deleter(p);
         });
     ALOGI("created component");
     return res;
 }
 
 std::shared_ptr<const C2Component::Traits>
-GoldfishComponentStore::ComponentModule::getTraits() {
-    std::unique_lock<std::recursive_mutex> lock(mLock);
+GoldfishComponentStore::ComponentModule::getTraits() const {
     return mTraits;
+}
+
+std::pair<c2_status_t, std::shared_ptr<GoldfishComponentStore::ComponentModule>>
+GoldfishComponentStore::ComponentLoader::fetch() {
+    std::shared_ptr<ComponentModule> localModule = mModuleCache.lock();
+    if (localModule) {
+        return {C2_OK, std::move(localModule)};
+    }
+
+    localModule = std::make_shared<ComponentModule>();
+    const c2_status_t res = localModule->init(mLibPath.c_str());
+    if (res != C2_OK) {
+        return {res, {}};
+    }
+
+    mModuleCache = localModule;
+    return {C2_OK, std::move(localModule)};
 }
 
 // We have a property set indicating whether to use the host side codec
@@ -257,23 +257,48 @@ static bool useAndroidGoldfishComponentInstance(const char *libname) {
 }
 
 GoldfishComponentStore::GoldfishComponentStore()
-    : mVisited(false), mReflector(std::make_shared<C2ReflectorHelper>()) {
-
-    ALOGW("created goldfish store %p reflector of param %p", this,
-          mReflector.get());
-    auto emplace = [this](const char *libPath) {
-        mComponents.emplace(libPath, libPath);
-    };
-
+        : mReflector(std::make_shared<C2ReflectorHelper>()) {
     if (useAndroidGoldfishComponentInstance("vpxdec")) {
-        emplace("libcodec2_goldfish_vp8dec.so");
-        emplace("libcodec2_goldfish_vp9dec.so");
+        mComponentLoaders.emplace_back("libcodec2_goldfish_vp8dec.so");
+        mComponentLoaders.emplace_back("libcodec2_goldfish_vp9dec.so");
     }
     if (useAndroidGoldfishComponentInstance("avcdec")) {
-        emplace("libcodec2_goldfish_avcdec.so");
+        mComponentLoaders.emplace_back("libcodec2_goldfish_avcdec.so");
     }
     if (useAndroidGoldfishComponentInstance("hevcdec")) {
-        emplace("libcodec2_goldfish_hevcdec.so");
+        mComponentLoaders.emplace_back("libcodec2_goldfish_hevcdec.so");
+    }
+}
+
+void GoldfishComponentStore::visitComponents() {
+    std::lock_guard<std::mutex> lock(mMutex);
+    if (!mComponentList.empty()) {
+        return;
+    }
+
+    const unsigned n = mComponentLoaders.size();
+    for (unsigned i = 0; i < n; ++i) {
+        ComponentLoader& loader = mComponentLoaders[i];
+        const auto [res, module] = loader.fetch();
+        if (res == C2_OK) {
+            std::shared_ptr<const C2Component::Traits> traits = module->getTraits();
+            if (traits) {
+                mComponentList.push_back(traits);
+                for (const C2String &alias : traits->aliases) {
+                    const auto [it, ok] = mComponentLoaderIndex.insert({alias, i});
+                    if (!ok) {
+                        ALOGE("Could not insert '%s' alias because it is "
+                              "already occupied by '%s'", alias.c_str(),
+                              mComponentLoaders[it->second].getLibPath().c_str());
+                    }
+                }
+            } else {
+                ALOGE("The module from '%s' does not have traits",
+                      loader.getLibPath().c_str());
+            }
+        } else {
+            ALOGE("Could not fetch the module from '%s'", loader.getLibPath().c_str());
+        }
     }
 }
 
@@ -301,55 +326,27 @@ c2_status_t GoldfishComponentStore::config_sm(
     return params.empty() ? C2_OK : C2_BAD_INDEX;
 }
 
-void GoldfishComponentStore::visitComponents() {
-    std::lock_guard<std::mutex> lock(mMutex);
-    if (mVisited) {
-        return;
-    }
-    for (auto &pathAndLoader : mComponents) {
-        const C2String &path = pathAndLoader.first;
-        ComponentLoader &loader = pathAndLoader.second;
-        std::shared_ptr<ComponentModule> module;
-        if (loader.fetchModule(&module) == C2_OK) {
-            std::shared_ptr<const C2Component::Traits> traits =
-                module->getTraits();
-            if (traits) {
-                mComponentList.push_back(traits);
-                mComponentNameToPath.emplace(traits->name, path);
-                for (const C2String &alias : traits->aliases) {
-                    mComponentNameToPath.emplace(alias, path);
-                }
-            }
-        }
-    }
-    mVisited = true;
-}
-
 std::vector<std::shared_ptr<const C2Component::Traits>>
 GoldfishComponentStore::listComponents() {
-    // This method SHALL return within 500ms.
     visitComponents();
     return mComponentList;
 }
 
-c2_status_t GoldfishComponentStore::findComponent(
-    C2String name, std::shared_ptr<ComponentModule> *module) {
-    (*module).reset();
+std::pair<c2_status_t, std::shared_ptr<GoldfishComponentStore::ComponentModule>>
+GoldfishComponentStore::findComponent(const C2String& name) {
     visitComponents();
 
-    auto pos = mComponentNameToPath.find(name);
-    if (pos != mComponentNameToPath.end()) {
-        return mComponents.at(pos->second).fetchModule(module);
+    auto i = mComponentLoaderIndex.find(name);
+    if (i != mComponentLoaderIndex.end()) {
+        std::lock_guard<std::mutex> lock(mMutex);
+        return mComponentLoaders[i->second].fetch();
     }
-    return C2_NOT_FOUND;
+    return {C2_NOT_FOUND, {}};
 }
 
 c2_status_t GoldfishComponentStore::createComponent(
     C2String name, std::shared_ptr<C2Component> *const component) {
-    // This method SHALL return within 100ms.
-    component->reset();
-    std::shared_ptr<ComponentModule> module;
-    c2_status_t res = findComponent(name, &module);
+    auto [res, module] = findComponent(name);
     if (res == C2_OK) {
         // TODO: get a unique node ID
         res = module->createComponent(0, component);
@@ -359,10 +356,7 @@ c2_status_t GoldfishComponentStore::createComponent(
 
 c2_status_t GoldfishComponentStore::createInterface(
     C2String name, std::shared_ptr<C2ComponentInterface> *const interface) {
-    // This method SHALL return within 100ms.
-    interface->reset();
-    std::shared_ptr<ComponentModule> module;
-    c2_status_t res = findComponent(name, &module);
+    auto [res, module] = findComponent(name);
     if (res == C2_OK) {
         // TODO: get a unique node ID
         res = module->createInterface(0, interface);
