@@ -102,13 +102,14 @@ PRODUCT_PACKAGES += \
     libGoldfishProfiler \
     dlkm_loader
 
-ifneq ($(filter %_minigbm, $(TARGET_PRODUCT)),)
-PRODUCT_VENDOR_PROPERTIES += ro.hardware.gralloc=minigbm
+# include minigbm regardless
 PRODUCT_PACKAGES += \
     android.hardware.graphics.allocator-service.minigbm \
     mapper.minigbm
+
+ifneq ($(filter %_minigbm, $(TARGET_PRODUCT)),)
+PRODUCT_VENDOR_PROPERTIES += ro.hardware.gralloc=minigbm
 else
-PRODUCT_VENDOR_PROPERTIES += ro.hardware.gralloc=ranchu
 PRODUCT_PACKAGES += android.hardware.graphics.allocator-service.ranchu
 endif
 
@@ -201,9 +202,8 @@ ifneq ($(EMULATOR_VENDOR_NO_CAMERA),true)
 PRODUCT_SOONG_NAMESPACES += \
     hardware/google/camera/devices/EmulatedCamera \
 
-ifneq ($(filter %_minigbm, $(TARGET_PRODUCT)),)
 PRODUCT_PACKAGES += android.hardware.camera.provider.ranchu_minigbm
-else
+ifeq ($(filter %_minigbm, $(TARGET_PRODUCT)),)
 PRODUCT_PACKAGES += android.hardware.camera.provider.ranchu
 endif
 
@@ -309,6 +309,7 @@ PRODUCT_COPY_FILES += \
     device/generic/goldfish/init/init.ranchu.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/init.ranchu.rc \
     device/generic/goldfish/init/init.system_ext.rc:$(TARGET_COPY_OUT_SYSTEM_EXT)/etc/init/init.system_ext.rc \
     device/generic/goldfish/init/ueventd.rc:$(TARGET_COPY_OUT_VENDOR)/etc/ueventd.rc \
+    device/generic/goldfish/input/QEMU_Virtio_Keyboard.idc:$(TARGET_COPY_OUT_VENDOR)/usr/idc/QEMU_Virtio_Keyboard.idc \
     device/generic/goldfish/input/virtio_input_rotary.idc:$(TARGET_COPY_OUT_VENDOR)/usr/idc/virtio_input_rotary.idc \
     device/generic/goldfish/input/qwerty2.idc:$(TARGET_COPY_OUT_VENDOR)/usr/idc/qwerty2.idc \
     device/generic/goldfish/input/qwerty2.kcm:$(TARGET_COPY_OUT_VENDOR)/usr/keychars/qwerty2.kcm \
