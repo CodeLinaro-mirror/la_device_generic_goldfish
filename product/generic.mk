@@ -74,6 +74,7 @@ PRODUCT_VENDOR_PROPERTIES += \
     debug.stagefright.c2inputsurface=-1 \
     debug.stagefright.ccodec=4 \
     graphics.gpu.profiler.support=false \
+    media.c2.hal.selection=aidl \
     persist.sys.zram_enabled=1 \
     wifi.direct.interface=p2p-dev-wlan0 \
     wifi.interface=wlan0 \
@@ -285,6 +286,16 @@ else
 CODECS_PERFORMANCE_C2_PROFILE := codecs_performance_c2_arm64.xml
 endif
 
+ifeq ($(PRODUCT_IS_DESKTOP_SDK),true)
+PRODUCT_COPY_FILES += \
+    device/generic/goldfish/input/QEMU_Virtio_Keyboard_generic.idc:$(TARGET_COPY_OUT_VENDOR)/usr/idc/QEMU_Virtio_Keyboard.idc \
+    device/generic/goldfish/input/qwerty2_generic.idc:$(TARGET_COPY_OUT_VENDOR)/usr/idc/qwerty2.idc
+else
+PRODUCT_COPY_FILES += \
+    device/generic/goldfish/input/QEMU_Virtio_Keyboard.idc:$(TARGET_COPY_OUT_VENDOR)/usr/idc/QEMU_Virtio_Keyboard.idc \
+    device/generic/goldfish/input/qwerty2.idc:$(TARGET_COPY_OUT_VENDOR)/usr/idc/qwerty2.idc
+endif
+
 PRODUCT_COPY_FILES += \
     frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_google_audio.xml \
     frameworks/av/media/libstagefright/data/media_codecs_google_telephony.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_google_telephony.xml \
@@ -309,9 +320,7 @@ PRODUCT_COPY_FILES += \
     device/generic/goldfish/init/init.ranchu.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/init.ranchu.rc \
     device/generic/goldfish/init/init.system_ext.rc:$(TARGET_COPY_OUT_SYSTEM_EXT)/etc/init/init.system_ext.rc \
     device/generic/goldfish/init/ueventd.rc:$(TARGET_COPY_OUT_VENDOR)/etc/ueventd.rc \
-    device/generic/goldfish/input/QEMU_Virtio_Keyboard.idc:$(TARGET_COPY_OUT_VENDOR)/usr/idc/QEMU_Virtio_Keyboard.idc \
     device/generic/goldfish/input/virtio_input_rotary.idc:$(TARGET_COPY_OUT_VENDOR)/usr/idc/virtio_input_rotary.idc \
-    device/generic/goldfish/input/qwerty2.idc:$(TARGET_COPY_OUT_VENDOR)/usr/idc/qwerty2.idc \
     device/generic/goldfish/input/qwerty2.kcm:$(TARGET_COPY_OUT_VENDOR)/usr/keychars/qwerty2.kcm \
     device/generic/goldfish/input/qwerty2.kl:$(TARGET_COPY_OUT_VENDOR)/usr/keylayout/qwerty2.kl \
     device/generic/goldfish/input/virtio_input_multi_touch_1.idc:$(TARGET_COPY_OUT_VENDOR)/usr/idc/virtio_input_multi_touch_1.idc \
@@ -347,3 +356,5 @@ PRODUCT_COPY_FILES += \
 PRODUCT_ENABLE_UFFD_GC := true
 
 PRODUCT_ENFORCE_SELINUX_TREBLE_LABELING := true
+
+PRODUCT_COMPRESSED_APEX := false

@@ -1,5 +1,4 @@
-#
-# Copyright (C) 2024 The Android Open Source Project
+# Copyright (C) 2026 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 #
+# Emulator keyboard configuration file #2.
+#
+touch.deviceType = touchScreen
+touch.orientationAware = 1
 
-# Enable large page size support
-PRODUCT_MAX_PAGE_SIZE_SUPPORTED := 16384
-PRODUCT_NO_BIONIC_PAGE_SIZE_MACRO := true
+# Reference Generic.kl and Generic.kcm under frameworks/base/data/keyboards/.
+keyboard.layout = Generic
+keyboard.characterMap = Generic
 
-# Verify all prebuilts are compatible with 16 KB mode as well
-PRODUCT_CHECK_PREBUILT_MAX_PAGE_SIZE := true
+keyboard.orientationAware = 0
+keyboard.builtIn = 1
+
+cursor.mode = navigation
+cursor.orientationAware = 1
