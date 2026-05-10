@@ -59,6 +59,7 @@ PRODUCT_VENDOR_PROPERTIES += \
     ro.hardware.audio.tinyalsa.period_size_multiplier=2 \
     ro.hardware.audio.tinyalsa.host_latency_ms=80 \
     ro.hardware.power=ranchu \
+    ro.hardware.virtual_device=1 \
     ro.incremental.enable=yes \
     ro.logd.size=1M \
     ro.kernel.qemu=1 \
@@ -299,11 +300,13 @@ endif
 PRODUCT_COPY_FILES += \
     frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_google_audio.xml \
     frameworks/av/media/libstagefright/data/media_codecs_google_telephony.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_google_telephony.xml \
-    device/generic/goldfish/codecs/media/profiles.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_profiles_V1_0.xml \
     device/generic/goldfish/codecs/media/codecs_google_video_default.xml:${TARGET_COPY_OUT_VENDOR}/etc/media_codecs_google_video.xml \
     device/generic/goldfish/codecs/media/codecs.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs.xml \
     device/generic/goldfish/codecs/media/$(CODECS_PERFORMANCE_C2_PROFILE):$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_performance_c2.xml \
 
+ifneq ($(EMULATOR_VENDOR_NO_MEDIA_PROFILES),true)
+PRODUCT_COPY_FILES += device/generic/goldfish/codecs/media/profiles.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_profiles_V1_0.xml
+endif
 
 PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/empty_data_disk:data/empty_data_disk \
